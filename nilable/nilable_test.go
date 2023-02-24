@@ -1,10 +1,12 @@
 package nilable_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/onur1/datatypes/nilable"
+	"github.com/onur1/datatypes/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,6 +42,15 @@ func TestNilable(t *testing.T) {
 		{
 			desc:    "Ap (nil)",
 			nilable: nilable.Ap(nilable.Some(double), nilable.Nil[int]()),
+		},
+		{
+			desc:     "FromResult (succeed)",
+			nilable:  nilable.FromResult(result.Succeed(42)),
+			expected: 42,
+		},
+		{
+			desc:    "FromResult (fail)",
+			nilable: nilable.FromResult(result.Fail[int](errors.New("some error"))),
 		},
 	}
 	for _, tC := range testCases {

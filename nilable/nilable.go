@@ -59,3 +59,11 @@ func Chain[A, B any](ma Nilable[A], f func(A) Nilable[B]) Nilable[B] {
 	}
 	return f(*ma)
 }
+
+func FromResult[A any](ma func() (A, error)) Nilable[A] {
+	a, err := ma()
+	if err != nil {
+		return nil
+	}
+	return Some(a)
+}
