@@ -5,8 +5,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/onur1/fp/event"
-	"github.com/onur1/fp/result"
+	"github.com/onur1/datatypes/event"
+	"github.com/onur1/datatypes/result"
 )
 
 // A Future represents a collection of asynchronous computations with

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/onur1/fp/result"
+	"github.com/onur1/datatypes/result"
 	"github.com/stretchr/testify/assert"
 )
 

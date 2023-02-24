@@ -1,4 +1,4 @@
-module github.com/onur1/fp
+module github.com/onur1/datatypes
 
 go 1.19
 

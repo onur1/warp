@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/onur1/fp/event"
+	"github.com/onur1/datatypes/event"
 )
 
 func ExampleEvent() {

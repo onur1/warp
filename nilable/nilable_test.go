@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/onur1/fp/nilable"
+	"github.com/onur1/datatypes/nilable"
 	"github.com/stretchr/testify/assert"
 )
 

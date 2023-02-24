@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/onur1/fp/event"
-	"github.com/onur1/fp/future"
-	"github.com/onur1/fp/result"
+	"github.com/onur1/datatypes/event"
+	"github.com/onur1/datatypes/future"
+	"github.com/onur1/datatypes/result"
 	"github.com/stretchr/testify/assert"
 )
 

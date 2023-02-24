@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/onur1/fp/event"
+	"github.com/onur1/datatypes/event"
 	"github.com/stretchr/testify/assert"
 )
 
