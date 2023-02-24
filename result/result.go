@@ -108,3 +108,10 @@ func Fold[A, B any](ma Result[A], onError func(error) B, onSuccess func(A) B) B 
 	}
 	return onSuccess(a)
 }
+
+func FromNilable[A any](ma *A, onNil func() error) Result[A] {
+	if ma == nil {
+		return Fail[A](onNil())
+	}
+	return Succeed(*ma)
+}

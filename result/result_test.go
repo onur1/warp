@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/onur1/datatypes/nilable"
 	"github.com/onur1/datatypes/result"
 	"github.com/stretchr/testify/assert"
 )
@@ -120,6 +121,20 @@ func TestResult(t *testing.T) {
 			desc: "Chain (fail)",
 			result: result.Chain(result.Fail[int](errFailed), func(a int) result.Result[int] {
 				return result.Succeed(a + 1)
+			}),
+			expectedErr: errFailed,
+		},
+		{
+			desc: "FromNilable (some)",
+			result: result.FromNilable(nilable.Some(42), func() error {
+				return errFailed
+			}),
+			expected: 42,
+		},
+		{
+			desc: "FromNilable (nil)",
+			result: result.FromNilable(nilable.Nil[int](), func() error {
+				return errFailed
 			}),
 			expectedErr: errFailed,
 		},
