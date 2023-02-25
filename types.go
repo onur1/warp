@@ -8,10 +8,10 @@ import (
 // co-exist, either the left one the right one will have zero value.
 type Either[E, A any] func() (E, A)
 
-// A These represents a value pair which contains two values that may have zero
-// values or not. This is "inclusive-or" (as opposed to "exclusive-or" provided
-// by Either), both values can have zero values, or only one of them, or both of
-// them can have non-zero values.
+// A These represents a value pair which contains two values that may have
+// non-zero values at the same time. This is "inclusive-or" (as opposed to
+// "exclusive-or" provided by Either), both values can have non-zero values,
+// or only one of them.
 type These[E, A any] func() (E, A)
 
 // A Result represents a result of a computation that either yields a value
