@@ -1,10 +1,12 @@
-package result_test
+package data_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	"github.com/onur1/data"
+	"github.com/onur1/data/event"
 	"github.com/onur1/data/result"
 )
 
@@ -64,4 +66,33 @@ func ExampleResult() {
 	// Result is 0.021
 	// Error is cannot divide by zero
 	// Error is empty slice
+}
+
+func ExampleEvent() {
+	dequeue := event.Fold(
+		event.Map(event.From([]int{1, 2, 3}), double),
+		0,
+		add,
+	)
+
+	r := make(chan int)
+
+	go dequeue(context.TODO(), r)
+
+	for i := range r {
+		fmt.Println(i)
+	}
+
+	// Output:
+	// 2
+	// 6
+	// 12
+}
+
+func double(n int) int {
+	return n * 2
+}
+
+func add(b, a int) int {
+	return b + a
 }
