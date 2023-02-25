@@ -24,12 +24,16 @@ type Nilable[A any] *A
 // An Event represents a collection of discrete occurrences with associated values.
 type Event[A any] func(context.Context, chan<- A)
 
-// A Future represents an Event that may fail, in that, it returns a value which
+// A Future represents an Event that may fail, in that, it returns a value which is
 // encapsulated in a Result.
 type Future[A any] Event[Result[A]]
 
 // A State represents a value which depends on itself through some computation.
 type State[S, A any] func(s S) (A, S)
+
+// A StateFuture represents a value or an error that exists in the future and
+// depends on itself through some computation.
+type StateFuture[S, A comparable] func(s S) Future[These[A, S]]
 
 // An IO represents the result of a non-deterministic computation that may cause
 // side-effects, but never fails and yields a value of type A.
