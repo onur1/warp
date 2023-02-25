@@ -4,6 +4,10 @@ import (
 	"context"
 )
 
+// An Either represents a value pair which contains two values that can never
+// co-exist, either the left one the right one will have zero value.
+type Either[E, A comparable] func() (E, A)
+
 // A Result represents a result of a computation that either yields a value
 // of type A, or fails with an error.
 type Result[A any] func() (A, error)
