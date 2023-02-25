@@ -1,33 +1,41 @@
-// Package nilable implements the Nilable type and associated operations.
+// Package nilable implements the Nilable type.
 package nilable
 
-// A Nilable represents an optional value which is either some value or nil.
-type Nilable[A any] *A
+import (
+	"github.com/onur1/data"
+)
 
-func IsNil[A any](a Nilable[A]) bool {
+// IsNil returns true if the value is nil.
+func IsNil[A any](a data.Nilable[A]) bool {
 	return a == nil
 }
 
-func IsSome[A any](a Nilable[A]) bool {
+// IsSome returns true if the value is not nil.
+func IsSome[A any](a data.Nilable[A]) bool {
 	return a != nil
 }
 
-func Nil[A any]() Nilable[A] {
+// Nil creates a nilable with nil value.
+func Nil[A any]() data.Nilable[A] {
 	return nil
 }
 
-func Some[A any](a A) Nilable[A] {
+// Some creates a nilable with some value.
+func Some[A any](a A) data.Nilable[A] {
 	return &a
 }
 
-func Map[A, B any](fa Nilable[A], f func(A) B) Nilable[B] {
+// Map creates a nilable by applying a function on an existing value.
+func Map[A, B any](fa data.Nilable[A], f func(A) B) data.Nilable[B] {
 	if fa == nil {
 		return nil
 	}
 	return Some(f(*fa))
 }
 
-func Ap[A, B any](fab Nilable[func(A) B], fa Nilable[A]) Nilable[B] {
+// Ap creates a nilable by applying a function contained in the first nilable on
+// the value contained in the second nilable if they both exist.
+func Ap[A, B any](fab data.Nilable[func(A) B], fa data.Nilable[A]) data.Nilable[B] {
 	if fab == nil {
 		return nil
 	}
@@ -37,7 +45,18 @@ func Ap[A, B any](fab Nilable[func(A) B], fa Nilable[A]) Nilable[B] {
 	return Some((*fab)(*fa))
 }
 
-func ApFirst[A, B any](fa Nilable[A], fb Nilable[B]) Nilable[A] {
+// Chain creates a nilable which combines two nilables in sequence, using the
+// return value of one nilable to determine the next one.
+func Chain[A, B any](ma data.Nilable[A], f func(A) data.Nilable[B]) data.Nilable[B] {
+	if ma == nil {
+		return nil
+	}
+	return f(*ma)
+}
+
+// ApFirst creates a nilable by combining two nilables, keeping only the result
+// of the first.
+func ApFirst[A, B any](fa data.Nilable[A], fb data.Nilable[B]) data.Nilable[A] {
 	return Ap(Map(fa, func(a A) func(B) A {
 		return func(_ B) A {
 			return a
@@ -45,7 +64,9 @@ func ApFirst[A, B any](fa Nilable[A], fb Nilable[B]) Nilable[A] {
 	}), fb)
 }
 
-func ApSecond[A, B any](fa Nilable[A], fb Nilable[B]) Nilable[B] {
+// ApSecond creates a nilable by combining two nilables, keeping only the result
+// of the second.
+func ApSecond[A, B any](fa data.Nilable[A], fb data.Nilable[B]) data.Nilable[B] {
 	return Ap(Map(fa, func(_ A) func(B) B {
 		return func(b B) B {
 			return b
@@ -53,11 +74,13 @@ func ApSecond[A, B any](fa Nilable[A], fb Nilable[B]) Nilable[B] {
 	}), fb)
 }
 
-func Chain[A, B any](ma Nilable[A], f func(A) Nilable[B]) Nilable[B] {
-	if ma == nil {
+// FromResult converts a Result to a nilable, returning nil for errors.
+func FromResult[A any](ma data.Result[A]) data.Nilable[A] {
+	a, err := ma()
+	if err != nil {
 		return nil
 	}
-	return f(*ma)
+	return Some(a)
 }
 
 // FromNullable creates a nilable from a pointer to a value of type A.

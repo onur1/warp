@@ -1,54 +1,51 @@
-// Package future implements the Future type and associated operations.
+// Package future implements the Future type.
 package future
 
 import (
 	"context"
 	"time"
 
-	"github.com/onur1/datatypes/event"
-	"github.com/onur1/datatypes/result"
+	"github.com/onur1/data"
+	"github.com/onur1/data/event"
+	"github.com/onur1/data/result"
 )
 
-// A Future represents a collection of asynchronous computations with
-// their associated results.
-type Future[A any] event.Event[result.Result[A]]
-
 // Succeed creates a future that succeeds with a value.
-func Succeed[A any](a A) Future[A] {
-	return Future[A](event.Map(event.Of(a), result.Succeed[A]))
+func Succeed[A any](a A) data.Future[A] {
+	return data.Future[A](event.Map(event.Of(a), result.Succeed[A]))
 }
 
 // Fail creates a future that fails with an error.
-func Fail[A any](err error) Future[A] {
-	return Future[A](event.Map(event.Of(err), result.Fail[A]))
+func Fail[A any](err error) data.Future[A] {
+	return data.Future[A](event.Map(event.Of(err), result.Fail[A]))
 }
 
 // Success creates a future which always succeeds with values received from
 // a source event.
-func Success[A any](ea event.Event[A]) Future[A] {
-	return Future[A](event.Map(ea, result.Succeed[A]))
+func Success[A any](ea data.Event[A]) data.Future[A] {
+	return data.Future[A](event.Map(ea, result.Succeed[A]))
 }
 
 // Failure creates a future which always fails with errors received from
 // a source event.
-func Failure[A any](ea event.Event[error]) Future[A] {
-	return Future[A](event.Map(ea, result.Fail[A]))
+func Failure[A any](ea data.Event[error]) data.Future[A] {
+	return data.Future[A](event.Map(ea, result.Fail[A]))
 }
 
 // After creates a future that succeeds after a timeout.
-func After[A any](dur time.Duration, a A) Future[A] {
+func After[A any](dur time.Duration, a A) data.Future[A] {
 	return Success(event.After(dur, a))
 }
 
 // FailAfter creates a future that fails with an error after a timeout.
-func FailAfter[A any](dur time.Duration, err error) Future[A] {
+func FailAfter[A any](dur time.Duration, err error) data.Future[A] {
 	return Failure[A](event.After(dur, err))
 }
 
 // Attempt converts a function which returns a (value, error) pair into a future
 // that either succeeds with a value or fails with an error.
-func Attempt[A any](ra result.Result[A], onPanic func(any) error) Future[A] {
-	return func(ctx context.Context, sub chan<- result.Result[A]) {
+func Attempt[A any](ra data.Result[A], onPanic func(any) error) data.Future[A] {
+	return func(ctx context.Context, sub chan<- data.Result[A]) {
 		defer close(sub)
 
 		var (
@@ -94,35 +91,35 @@ func Attempt[A any](ra result.Result[A], onPanic func(any) error) Future[A] {
 	}
 }
 
-func Map[A, B any](fa Future[A], f func(A) B) Future[B] {
-	return Future[B](
+func Map[A, B any](fa data.Future[A], f func(A) B) data.Future[B] {
+	return data.Future[B](
 		event.Map(
-			event.Event[result.Result[A]](fa),
-			func(ra result.Result[A]) result.Result[B] {
+			data.Event[data.Result[A]](fa),
+			func(ra data.Result[A]) data.Result[B] {
 				return result.Map(ra, f)
 			},
 		),
 	)
 }
 
-func Ap[A, B any](fab Future[func(A) B], fa Future[A]) Future[B] {
-	return Future[B](event.Ap(
+func Ap[A, B any](fab data.Future[func(A) B], fa data.Future[A]) data.Future[B] {
+	return data.Future[B](event.Ap(
 		event.Map(
-			event.Event[result.Result[func(A) B]](fab),
-			func(gab result.Result[func(A) B]) func(result.Result[A]) result.Result[B] {
-				return func(ga result.Result[A]) result.Result[B] {
+			data.Event[data.Result[func(A) B]](fab),
+			func(gab data.Result[func(A) B]) func(data.Result[A]) data.Result[B] {
+				return func(ga data.Result[A]) data.Result[B] {
 					return result.Ap(gab, ga)
 				}
 			},
 		),
-		event.Event[result.Result[A]](fa),
+		data.Event[data.Result[A]](fa),
 	))
 }
 
-func Chain[A, B any](ma Future[A], f func(A) Future[B]) Future[B] {
-	return Future[B](
-		event.Chain(event.Event[result.Result[A]](ma), func(ra result.Result[A]) event.Event[result.Result[B]] {
-			return event.Event[result.Result[B]](result.Fold(ra, Fail[B], f))
+func Chain[A, B any](ma data.Future[A], f func(A) data.Future[B]) data.Future[B] {
+	return data.Future[B](
+		event.Chain(data.Event[data.Result[A]](ma), func(ra data.Result[A]) data.Event[data.Result[B]] {
+			return data.Event[data.Result[B]](result.Fold(ra, Fail[B], f))
 		}),
 	)
 }

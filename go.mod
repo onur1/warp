@@ -1,4 +1,4 @@
-module github.com/onur1/datatypes
+module github.com/onur1/data
 
 go 1.19
 

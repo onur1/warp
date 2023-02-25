@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/onur1/datatypes/result"
+	"github.com/onur1/data"
+	"github.com/onur1/data/result"
 )
 
 func ExampleResult() {
@@ -12,7 +13,7 @@ func ExampleResult() {
 
 	// head returns the first value contained in a slice, or fails with
 	// an empty slice error.
-	head := func(as []float64) result.Result[float64] {
+	head := func(as []float64) data.Result[float64] {
 		if len(as) == 0 {
 			return result.Fail[float64](errEmptySlice)
 		}
@@ -23,7 +24,7 @@ func ExampleResult() {
 
 	// inverse returns an inverse of a number, or fails with
 	// division by zero error if 0 is encountered.
-	inverse := func(n float64) result.Result[float64] {
+	inverse := func(n float64) data.Result[float64] {
 		if n == 0 {
 			return result.Fail[float64](errDivByZero)
 		}

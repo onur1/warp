@@ -6,14 +6,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/onur1/datatypes/event"
+	"github.com/onur1/data"
+	"github.com/onur1/data/event"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEvent(t *testing.T) {
 	testCases := []struct {
 		desc      string
-		event     event.Event[int]
+		event     data.Event[int]
 		expected  []int
 		unordered bool
 	}{
@@ -34,7 +35,7 @@ func TestEvent(t *testing.T) {
 		},
 		{
 			desc: "Chain",
-			event: event.Chain(event.From([]int{1, 2, 3}), func(a int) event.Event[int] {
+			event: event.Chain(event.From([]int{1, 2, 3}), func(a int) data.Event[int] {
 				return event.From([]int{a, a + 1})
 			}),
 			expected: []int{1, 2, 2, 3, 3, 4},
@@ -115,7 +116,7 @@ func TestEvent(t *testing.T) {
 	}
 }
 
-func assertEq(t *testing.T, dequeue event.Event[int], expected []int, unordered bool) {
+func assertEq(t *testing.T, dequeue data.Event[int], expected []int, unordered bool) {
 	r := make(chan int)
 
 	go dequeue(context.TODO(), r)

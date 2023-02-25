@@ -2,18 +2,18 @@ package nilable_test
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
-	"github.com/onur1/datatypes/nilable"
-	"github.com/onur1/datatypes/result"
+	"github.com/onur1/data"
+	"github.com/onur1/data/nilable"
+	"github.com/onur1/data/result"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNilable(t *testing.T) {
 	testCases := []struct {
 		desc     string
-		nilable  nilable.Nilable[int]
+		nilable  data.Nilable[int]
 		expected int
 	}{
 		{
@@ -52,6 +52,31 @@ func TestNilable(t *testing.T) {
 			desc:    "FromResult (fail)",
 			nilable: nilable.FromResult(result.Fail[int](errors.New("some error"))),
 		},
+		{
+			desc: "FromNullable",
+			nilable: func() data.Nilable[int] {
+				var twelve = int(12)
+				return nilable.FromNullable(&twelve)
+			}(),
+			expected: 12,
+		},
+		{
+			desc:    "FromNullable (nil)",
+			nilable: nilable.FromNullable[int](nil),
+		},
+		{
+			desc: "Attempt",
+			nilable: nilable.Attempt(func() int {
+				return 42
+			}),
+			expected: 42,
+		},
+		{
+			desc: "Attempt (nil)",
+			nilable: nilable.Attempt(func() int {
+				panic("")
+			}),
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
@@ -60,7 +85,7 @@ func TestNilable(t *testing.T) {
 	}
 }
 
-func assertEq(t *testing.T, v nilable.Nilable[int], expected int) {
+func assertEq(t *testing.T, v data.Nilable[int], expected int) {
 	if v == nil {
 		assert.Equal(t, expected, 0)
 	} else {
@@ -70,12 +95,4 @@ func assertEq(t *testing.T, v nilable.Nilable[int], expected int) {
 
 func double(n int) int {
 	return n * 2
-}
-
-func isPositive(n int) bool {
-	return n > 0
-}
-
-func wrappedError(err error) error {
-	return fmt.Errorf("wrapped: %w", err)
 }

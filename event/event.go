@@ -1,19 +1,17 @@
-// Package event implements the Event type and associated operations.
+// Package event implements the Event type.
 package event
 
 import (
 	"context"
 	"time"
 
+	"github.com/onur1/data"
 	"github.com/onur1/sliding"
 )
 
-// An Event represents a collection of discrete occurrences with associated values.
-type Event[A any] func(context.Context, chan<- A)
-
 // Map creates an event by applying a function on each value received from a source
 // event.
-func Map[A, B any](fa Event[A], f func(A) B) Event[B] {
+func Map[A, B any](fa data.Event[A], f func(A) B) data.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -42,7 +40,7 @@ func Map[A, B any](fa Event[A], f func(A) B) Event[B] {
 
 // Ap creates an event by applying the latest observed function from the first event on
 // each value received from the second event.
-func Ap[A, B any](fab Event[func(A) B], fa Event[A]) Event[B] {
+func Ap[A, B any](fab data.Event[func(A) B], fa data.Event[A]) data.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -109,7 +107,7 @@ func Ap[A, B any](fab Event[func(A) B], fa Event[A]) Event[B] {
 
 // Chain creates an event which composes two events in sequence, using the return value
 // of the first event to determine the next one.
-func Chain[A, B any](fa Event[A], f func(A) Event[B]) Event[B] {
+func Chain[A, B any](fa data.Event[A], f func(A) data.Event[B]) data.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -118,7 +116,7 @@ func Chain[A, B any](fa Event[A], f func(A) Event[B]) Event[B] {
 			bs   chan B
 			a    A
 			b    B
-			fb   Event[B]
+			fb   data.Event[B]
 			done = ctx.Done()
 		)
 
@@ -149,7 +147,7 @@ func Chain[A, B any](fa Event[A], f func(A) Event[B]) Event[B] {
 // Reduce returns a value by applying a function on each value received from an event,
 // in order, passing in the value and the return value from the calculation on the
 // preceding element.
-func Reduce[A, B any](ctx context.Context, fa Event[A], b B, f func(B, A) B) B {
+func Reduce[A, B any](ctx context.Context, fa data.Event[A], b B, f func(B, A) B) B {
 	as := make(chan A)
 
 	go fa(ctx, as)
@@ -166,7 +164,7 @@ func Reduce[A, B any](ctx context.Context, fa Event[A], b B, f func(B, A) B) B {
 // ReduceRight applies a function against an accumulator and each observed value of
 // the event (from right-to-left) to reduce it to a single value.
 // Same as Reduce but applied from end to start.
-func ReduceRight[A, B any](ctx context.Context, fa Event[A], b B, f func(A, B) B) B {
+func ReduceRight[A, B any](ctx context.Context, fa data.Event[A], b B, f func(A, B) B) B {
 	asc := make(chan A)
 
 	go fa(ctx, asc)
@@ -191,7 +189,7 @@ func ReduceRight[A, B any](ctx context.Context, fa Event[A], b B, f func(A, B) B
 
 // SampleOn creates an event which samples the latest values from the first event at
 // the times when the second event fires.
-func SampleOn[A, B any](fa Event[A], fab Event[func(A) B]) Event[B] {
+func SampleOn[A, B any](fa data.Event[A], fab data.Event[func(A) B]) data.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -253,14 +251,14 @@ func identity[A any](a A) A {
 
 // SampleOn_ creates an event which samples the latest values from the first event at the
 // times when the second event fires, ignoring the values produced by the second event.
-func SampleOn_[A, B any](fa Event[A], fb Event[B]) Event[A] {
+func SampleOn_[A, B any](fa data.Event[A], fb data.Event[B]) data.Event[A] {
 	return SampleOn(fa, Map(fb, func(_ B) func(A) A {
 		return identity[A]
 	}))
 }
 
 // Alt creates an event which emits values simultaneously from two source events.
-func Alt[A any](x Event[A], y Event[A]) Event[A] {
+func Alt[A any](x data.Event[A], y data.Event[A]) data.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -319,7 +317,7 @@ func Alt[A any](x Event[A], y Event[A]) Event[A] {
 }
 
 // Filter creates an event which emits values from a source event when a predicate holds.
-func Filter[A any](fa Event[A], predicate func(A) bool) Event[A] {
+func Filter[A any](fa data.Event[A], predicate func(A) bool) data.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -353,18 +351,18 @@ func plus1_[A any](_ A, n int) int {
 }
 
 // Count creates an event that emits the number of times a source event is fired.
-func Count[A any](fa Event[A]) Event[int] {
+func Count[A any](fa data.Event[A]) data.Event[int] {
 	return Fold(fa, 0, plus1_[A])
 }
 
 // CountAll returns the number of times a source event is fired in total.
-func CountAll[A any](ctx context.Context, fa Event[A]) int {
+func CountAll[A any](ctx context.Context, fa data.Event[A]) int {
 	return ReduceRight(ctx, fa, 0, plus1_[A])
 }
 
 // CountWindow creates an event which emits the number of times a source event is fired
 // within a moving time window approximately.
-func CountWindow[A any](fa Event[A], dur time.Duration) Event[int] {
+func CountWindow[A any](fa data.Event[A], dur time.Duration) data.Event[int] {
 	return func(ctx context.Context, sub chan<- int) {
 		defer close(sub)
 
@@ -397,7 +395,7 @@ func CountWindow[A any](fa Event[A], dur time.Duration) Event[int] {
 }
 
 // Take creates an event which emits the first n values observed from a source event.
-func Take[A any](fa Event[A], n int) Event[A] {
+func Take[A any](fa data.Event[A], n int) data.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -433,7 +431,7 @@ func Take[A any](fa Event[A], n int) Event[A] {
 
 // Fold creates an event which combines the values from a source event by applying
 // a function starting with an initial value.
-func Fold[A, B any](fa Event[A], b B, f func(A, B) B) Event[B] {
+func Fold[A, B any](fa data.Event[A], b B, f func(A, B) B) data.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -463,7 +461,7 @@ func Fold[A, B any](fa Event[A], b B, f func(A, B) B) Event[B] {
 }
 
 // Of creates an event which emits a single value.
-func Of[A any](a A) Event[A] {
+func Of[A any](a A) data.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -480,7 +478,7 @@ func Of[A any](a A) Event[A] {
 }
 
 // Interval creates an event which emits the current time periodically.
-func Interval(dur time.Duration) Event[time.Time] {
+func Interval(dur time.Duration) data.Event[time.Time] {
 	return func(ctx context.Context, sub chan<- time.Time) {
 		defer close(sub)
 
@@ -523,7 +521,7 @@ func Interval(dur time.Duration) Event[time.Time] {
 }
 
 // From creates an event which emits multiple values sequentially from the supplied slice.
-func From[A any](as []A) Event[A] {
+func From[A any](as []A) data.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -549,7 +547,7 @@ func From[A any](as []A) Event[A] {
 }
 
 // After creates an event which emits a value after waiting for the specified duration.
-func After[A any](dur time.Duration, a A) Event[A] {
+func After[A any](dur time.Duration, a A) data.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -588,7 +586,7 @@ func After[A any](dur time.Duration, a A) Event[A] {
 
 // MapNotNil creates an event which filters out any nil values by applying a function
 // on each value received from some source event.
-func MapNotNil[A, B any](fa Event[A], f func(A) *B) Event[B] {
+func MapNotNil[A, B any](fa data.Event[A], f func(A) *B) data.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -630,7 +628,7 @@ type Last[A any] struct {
 }
 
 // WithLast creates an event which emits successive event values.
-func WithLast[A any](fa Event[A]) Event[*Last[A]] {
+func WithLast[A any](fa data.Event[A]) data.Event[*Last[A]] {
 	return MapNotNil(
 		Fold(fa, nil, func(a A, l **Last[A]) **Last[A] {
 			if l == nil {
@@ -652,7 +650,7 @@ type Time[A any] struct {
 }
 
 // WithTime creates an event which reports the current local time.
-func WithTime[A any](fa Event[A]) Event[*Time[A]] {
+func WithTime[A any](fa data.Event[A]) data.Event[*Time[A]] {
 	return func(ctx context.Context, sub chan<- *Time[A]) {
 		defer close(sub)
 

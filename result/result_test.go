@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/onur1/datatypes/nilable"
-	"github.com/onur1/datatypes/result"
+	"github.com/onur1/data"
+	"github.com/onur1/data/nilable"
+	"github.com/onur1/data/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +19,7 @@ var (
 func TestResult(t *testing.T) {
 	testCases := []struct {
 		desc        string
-		result      result.Result[int]
+		result      data.Result[int]
 		expected    int
 		expectedErr error
 	}{
@@ -112,14 +113,14 @@ func TestResult(t *testing.T) {
 		},
 		{
 			desc: "Chain (succeed)",
-			result: result.Chain(result.Succeed(42), func(a int) result.Result[int] {
+			result: result.Chain(result.Succeed(42), func(a int) data.Result[int] {
 				return result.Succeed(a + 1)
 			}),
 			expected: 43,
 		},
 		{
 			desc: "Chain (fail)",
-			result: result.Chain(result.Fail[int](errFailed), func(a int) result.Result[int] {
+			result: result.Chain(result.Fail[int](errFailed), func(a int) data.Result[int] {
 				return result.Succeed(a + 1)
 			}),
 			expectedErr: errFailed,
@@ -146,7 +147,7 @@ func TestResult(t *testing.T) {
 	}
 }
 
-func assertEq(t *testing.T, res result.Result[int], expected int, expectedErr error) {
+func assertEq(t *testing.T, res data.Result[int], expected int, expectedErr error) {
 	x, err := res()
 	if err != nil {
 		assert.Equal(t, expectedErr, err)
