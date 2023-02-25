@@ -22,6 +22,8 @@ type Future[A any] Event[Result[A]]
 // A State represents a computation that depend on and modify some internal state.
 type State[S, A any] func(s S) (A, S)
 
-type Predicate[A any] func(A) bool
-
+// An IO is a computation which, when performed, does some I/O before returning
+// a value of type A.
 type IO[A any] func() A
+
+type Predicate[A any] func(A) bool
