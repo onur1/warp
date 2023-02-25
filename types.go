@@ -39,4 +39,5 @@ type StateFuture[S, A any] func(s S) Future[These[A, S]]
 // side-effects, but never fails and yields a value of type A.
 type IO[A any] func() A
 
+// A Predicate represents a predicate (boolean-valued function) of one argument.
 type Predicate[A any] func(A) bool
