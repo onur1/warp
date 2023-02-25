@@ -5,13 +5,13 @@ import (
 	"github.com/onur1/data"
 )
 
-func Right[E, A comparable](a A) data.Either[E, A] {
+func Right[E, A any](a A) data.Either[E, A] {
 	return func() (e E, _ A) {
 		return e, a
 	}
 }
 
-func Left[E, A comparable](e E) data.Either[E, A] {
+func Left[E, A any](e E) data.Either[E, A] {
 	return func() (_ E, a A) {
 		return e, a
 	}
