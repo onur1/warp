@@ -60,10 +60,28 @@ func Chain[A, B any](ma Nilable[A], f func(A) Nilable[B]) Nilable[B] {
 	return f(*ma)
 }
 
-func FromResult[A any](ma func() (A, error)) Nilable[A] {
-	a, err := ma()
-	if err != nil {
-		return nil
+// FromNullable creates a nilable from a pointer to a value of type A.
+func FromNullable[A any](ptr *A) data.Nilable[A] {
+	if ptr != nil {
+		return Some(*ptr)
 	}
-	return Some(a)
+	return nil
+}
+
+// FromPredicate creates a nilable by testing a value against a predicate first.
+func FromPredicate[A any](a A, predicate data.Predicate[A]) data.Nilable[A] {
+	if predicate(a) {
+		return Some(a)
+	} else {
+		return Nil[A]()
+	}
+}
+
+// Attempt creates a nilable by running a function which returns a value,
+// recovering with nil if a panic is thrown.
+func Attempt[A any](f data.Lazy[A]) data.Nilable[A] {
+	defer func() {
+		recover()
+	}()
+	return Some(f())
 }
