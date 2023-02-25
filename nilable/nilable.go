@@ -74,21 +74,13 @@ func ApSecond[A, B any](fa data.Nilable[A], fb data.Nilable[B]) data.Nilable[B] 
 	}), fb)
 }
 
-// FromResult converts a Result to a nilable, returning nil for errors.
+// FromResult creates a nilable from a result, returning nil for errors.
 func FromResult[A any](ma data.Result[A]) data.Nilable[A] {
 	a, err := ma()
 	if err != nil {
 		return nil
 	}
 	return Some(a)
-}
-
-// FromNullable creates a nilable from a pointer to a value of type A.
-func FromNullable[A any](ptr *A) data.Nilable[A] {
-	if ptr != nil {
-		return Some(*ptr)
-	}
-	return nil
 }
 
 // FromPredicate creates a nilable by testing a value against a predicate first.
@@ -102,7 +94,7 @@ func FromPredicate[A any](a A, predicate data.Predicate[A]) data.Nilable[A] {
 
 // Attempt creates a nilable by running a function which returns a value,
 // recovering with nil if a panic is thrown.
-func Attempt[A any](f data.Lazy[A]) data.Nilable[A] {
+func Attempt[A any](f data.IO[A]) data.Nilable[A] {
 	defer func() {
 		recover()
 	}()

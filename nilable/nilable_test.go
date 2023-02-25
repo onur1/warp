@@ -53,18 +53,6 @@ func TestNilable(t *testing.T) {
 			nilable: nilable.FromResult(result.Fail[int](errors.New("some error"))),
 		},
 		{
-			desc: "FromNullable",
-			nilable: func() data.Nilable[int] {
-				var twelve = int(12)
-				return nilable.FromNullable(&twelve)
-			}(),
-			expected: 12,
-		},
-		{
-			desc:    "FromNullable (nil)",
-			nilable: nilable.FromNullable[int](nil),
-		},
-		{
 			desc: "Attempt",
 			nilable: nilable.Attempt(func() int {
 				return 42
