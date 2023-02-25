@@ -14,8 +14,8 @@ func Succeed[A any](a A) data.Result[A] {
 
 // Fail creates a result which always fails with an error.
 func Fail[A any](err error) data.Result[A] {
-	return func() (A, error) {
-		return *(new(A)), err
+	return func() (a A, _ error) {
+		return a, err
 	}
 }
 
@@ -109,6 +109,8 @@ func Fold[A, B any](ma data.Result[A], onError func(error) B, onSuccess func(A) 
 	return onSuccess(a)
 }
 
+// FromNilable creates a result from a nilable, returning the supplied error
+// for nil values.
 func FromNilable[A any](ma data.Nilable[A], onNil func() error) data.Result[A] {
 	if ma == nil {
 		return Fail[A](onNil())
