@@ -8,7 +8,8 @@ import (
 // of type A, or fails with an error.
 type Result[A any] func() (A, error)
 
-// A Nilable represents an optional value which is either some value or nil.
+// A Nilable is a pointer to a value of type A and it represents an optional value
+// which is either some value or nil.
 type Nilable[A any] *A
 
 // An Event represents a collection of discrete occurrences with associated values.
@@ -20,4 +21,4 @@ type Future[A any] Event[Result[A]]
 
 type Predicate[A any] func(A) bool
 
-type Lazy[A any] func() A
+type IO[A any] func() A
