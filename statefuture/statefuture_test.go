@@ -10,6 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+
+func double(n int) int {
+	return n * 2
+}
+
 func TestStateFuture(t *testing.T) {
 	testCases := []struct {
 		desc        string
@@ -23,6 +28,11 @@ func TestStateFuture(t *testing.T) {
 			desc:        "Succeed",
 			stateFuture: statefuture.Succeed[int](42),
 			expected:    []data.Result[[]int]{result.Succeed([]int{42, 0})},
+		},
+		{
+			desc:        "Map",
+			stateFuture: statefuture.Map(statefuture.Succeed[int](42), double),
+			expected:    []data.Result[[]int]{result.Succeed([]int{84, 0})},
 		},
 	}
 	for _, tC := range testCases {

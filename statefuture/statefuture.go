@@ -13,3 +13,15 @@ func Succeed[S, A any](a A) data.StateFuture[S, A] {
 	}
 }
 
+func Map[S, A, B any](fa data.StateFuture[S, A], f func(A) B) data.StateFuture[S, B] {
+	return func(s S) data.Future[data.These[B, S]] {
+		return future.Map(
+			fa(s),
+			func(tas data.These[A, S]) data.These[B, S] {
+				a, s1 := tas()
+				return these.Both(f(a), s1)
+			},
+		)
+	}
+}
+
