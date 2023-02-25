@@ -34,6 +34,18 @@ func TestStateFuture(t *testing.T) {
 			stateFuture: statefuture.Map(statefuture.Succeed[int](42), double),
 			expected:    []data.Result[[]int]{result.Succeed([]int{84, 0})},
 		},
+		{
+			desc:        "Ap",
+			stateFuture: statefuture.Ap(statefuture.Succeed[int](double), statefuture.Succeed[int](2)),
+			expected:    []data.Result[[]int]{result.Succeed([]int{4, 0})},
+		},
+		{
+			desc: "Chain",
+			stateFuture: statefuture.Chain(statefuture.Succeed[int](42), func(n int) data.StateFuture[int, int] {
+				return statefuture.Succeed[int](26)
+			}),
+			expected: []data.Result[[]int]{result.Succeed([]int{26, 0})},
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
