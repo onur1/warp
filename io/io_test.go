@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNilable(t *testing.T) {
+func TestIO(t *testing.T) {
 	testCases := []struct {
 		desc     string
 		io       data.IO[int]
