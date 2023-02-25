@@ -19,6 +19,9 @@ type Event[A any] func(context.Context, chan<- A)
 // their associated results.
 type Future[A any] Event[Result[A]]
 
+// A State represents a computation that depend on and modify some internal state.
+type State[S, A any] func(s S) (A, S)
+
 type Predicate[A any] func(A) bool
 
 type IO[A any] func() A
