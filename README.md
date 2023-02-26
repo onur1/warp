@@ -2,7 +2,7 @@
 
 Package data provides a set of useful data types for working with different types of data, such as data that contains an error, data that doesn't exist, data that doesn't exist _yet_, data that keeps changing, and etc.
 
-This is a [functional programming](https://github.com/enricopolanski/functional-programming) library which attempts to bring [fp-ts](https://github.com/gcanti/fp-ts) non-pipeables into Go using generics, and in Go style.
+This is a [functional programming](https://github.com/enricopolanski/functional-programming) library which attempts to bring [fp-ts](https://gcanti.github.io/fp-ts/) non-pipeables into Go using generics, and in Go style.
 
 The practical part of FP is all about higher level abstractions, like these types that describe some nature of data, and combining their behaviors to gain properties and functionality to deal with data in more detail.
 
