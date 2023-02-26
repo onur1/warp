@@ -4,18 +4,10 @@ import (
 	"context"
 )
 
-// An Either represents a value pair which contains two values that can never
-// co-exist, either the left one the right one will have zero value.
-type Either[E, A any] func() (E, A)
+// An IO represents a computation that never fails and yields a value of type A.
+type IO[A any] func() A
 
-// A These represents a value pair which contains two values that may have
-// non-zero values at the same time. This is "inclusive-or" (as opposed to
-// "exclusive-or" provided by Either), both values can have non-zero values,
-// or only one of them.
-type These[E, A any] func() (E, A)
-
-// A Result represents a result of a computation that either yields a value
-// of type A, or fails with an error.
+// A Result represents some result which is either a value of type A, or an error.
 type Result[A any] func() (A, error)
 
 // A Nilable represents an optional value which is either some value or nil.
@@ -30,14 +22,6 @@ type Future[A any] Event[Result[A]]
 
 // A State represents a value which depends on itself through some computation.
 type State[S, A any] func(s S) (A, S)
-
-// A StateFuture represents a value or an error that exists in the future and
-// depends on itself through some computation.
-type StateFuture[S, A any] func(s S) Future[These[A, S]]
-
-// An IO represents the result of a non-deterministic computation that may cause
-// side-effects, but never fails and yields a value of type A.
-type IO[A any] func() A
 
 // A Predicate represents a predicate (boolean-valued function) of one argument.
 type Predicate[A any] func(A) bool
