@@ -4,6 +4,6 @@ Package data provides a set of useful data types for working with different type
 
 This is a [functional programming](https://github.com/enricopolanski/functional-programming) library which attempts to bring [fp-ts](https://github.com/gcanti/fp-ts) non-pipeables into Go using generics, and in Go style.
 
-The practical part of FP is all about higher level abstractions, like these types that describe some nature of data, and combining their behaviors to gain properties and functionality to deal with data even in more complex scenarios.
+The practical part of FP is all about higher level abstractions, like these types that describe some nature of data, and combining their behaviors to gain properties and functionality to deal with data in more detail.
 
 Data types must obey certain laws to implement a [typeclass](https://wiki.haskell.org/Typeclassopedia) instance (that contains implementations of functions defined in a typeclass, such as [functors, applicatives and monads](https://www.adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html)), specialized to a particular type. These laws are rooted in [category theory](https://www.youtube.com/watch?v=V10hzjgoklA) and together they form a type system that ensures safety and composability.
