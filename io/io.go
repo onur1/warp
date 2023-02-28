@@ -47,21 +47,21 @@ func ChainFirst[A, B any](ma data.IO[A], f func(A) data.IO[B]) data.IO[A] {
 	})
 }
 
-func ChainRec[A comparable, B any](init A, f func(A) data.IO[func() (A, B)]) data.IO[B] {
+func ChainRec[A, B any](init A, f func(A) data.IO[func() (A, B, bool)]) data.IO[B] {
 	return func() B {
 		var (
-			a     A
-			b     B
-			zeroA A
+			a  A
+			b  B
+			ok bool
 		)
 
-		a, b = f(init)()()
+		a, b, ok = f(init)()()
 
 		for {
-			if a == zeroA {
+			if ok {
 				break
 			}
-			a, b = f(a)()()
+			a, b, ok = f(a)()()
 		}
 
 		return b

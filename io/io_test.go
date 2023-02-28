@@ -55,13 +55,13 @@ func TestIO(t *testing.T) {
 		},
 		{
 			desc: "ChainRec",
-			io: io.ChainRec(0, func(n int) data.IO[func() (int, int)] {
+			io: io.ChainRec(0, func(n int) data.IO[func() (int, int, bool)] {
 				return io.Of(
-					func() (int, int) {
+					func() (int, int, bool) {
 						if n < 15000 {
-							return n + 1, 0
+							return n + 1, 0, false
 						} else {
-							return 0, 15000
+							return 0, 15000, true
 						}
 					},
 				)
