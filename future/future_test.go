@@ -38,20 +38,20 @@ func TestFuture(t *testing.T) {
 		{
 			desc:     "Succeed",
 			future:   future.Succeed(42),
-			expected: []data.Result[int]{result.Succeed(42)},
+			expected: []data.Result[int]{result.Ok(42)},
 		},
 		{
 			desc:     "Fail",
 			future:   future.Fail[int](errFailed),
-			expected: []data.Result[int]{result.Fail[int](errFailed)},
+			expected: []data.Result[int]{result.Error[int](errFailed)},
 		},
 		{
 			desc:   "Success",
 			future: future.Success(event.From([]int{1, 2, 3})),
 			expected: []data.Result[int]{
-				result.Succeed(1),
-				result.Succeed(2),
-				result.Succeed(3),
+				result.Ok(1),
+				result.Ok(2),
+				result.Ok(3),
 			},
 		},
 		{
@@ -61,55 +61,55 @@ func TestFuture(t *testing.T) {
 				errSecond,
 			})),
 			expected: []data.Result[int]{
-				result.Fail[int](errFirst),
-				result.Fail[int](errSecond),
+				result.Error[int](errFirst),
+				result.Error[int](errSecond),
 			},
 		},
 		{
 			desc:     "After",
 			future:   future.After(time.Millisecond*1, 42),
-			expected: []data.Result[int]{result.Succeed(42)},
+			expected: []data.Result[int]{result.Ok(42)},
 		},
 		{
 			desc:     "FailAfter",
 			future:   future.FailAfter[int](time.Millisecond*1, errFailed),
-			expected: []data.Result[int]{result.Fail[int](errFailed)},
+			expected: []data.Result[int]{result.Error[int](errFailed)},
 		},
 		{
 			desc: "Attempt (succeed)",
 			future: future.Attempt(func() (int, error) {
 				return 42, nil
 			}, fatalerror),
-			expected: []data.Result[int]{result.Succeed(42)},
+			expected: []data.Result[int]{result.Ok(42)},
 		},
 		{
 			desc: "Attempt (fail)",
 			future: future.Attempt(func() (int, error) {
 				return 0, errFailed
 			}, fatalerror),
-			expected: []data.Result[int]{result.Fail[int](errFailed)},
+			expected: []data.Result[int]{result.Error[int](errFailed)},
 		},
 		{
 			desc: "Attempt (panic)",
 			future: future.Attempt(func() (int, error) {
 				panic("barbaz")
 			}, fatalerror),
-			expected: []data.Result[int]{result.Fail[int](errors.New("fatal: barbaz"))},
+			expected: []data.Result[int]{result.Error[int](errors.New("fatal: barbaz"))},
 		},
 		{
 			desc:     "Map (succeed)",
 			future:   future.Map(future.Succeed(42), double),
-			expected: []data.Result[int]{result.Succeed(84)},
+			expected: []data.Result[int]{result.Ok(84)},
 		},
 		{
 			desc:     "Map (fail)",
 			future:   future.Map(future.Fail[int](errFailed), double),
-			expected: []data.Result[int]{result.Fail[int](errFailed)},
+			expected: []data.Result[int]{result.Error[int](errFailed)},
 		},
 		{
 			desc:     "Ap (succeed)",
 			future:   future.Ap(future.Success(event.From([]func(int) int{double})), future.Succeed(42)),
-			expected: []data.Result[int]{result.Succeed(84)},
+			expected: []data.Result[int]{result.Ok(84)},
 		},
 	}
 	for _, tC := range testCases {
