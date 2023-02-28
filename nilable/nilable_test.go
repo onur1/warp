@@ -45,12 +45,12 @@ func TestNilable(t *testing.T) {
 		},
 		{
 			desc:     "FromResult (succeed)",
-			nilable:  nilable.FromResult(result.Succeed(42)),
+			nilable:  nilable.FromResult(result.Ok(42)),
 			expected: 42,
 		},
 		{
 			desc:    "FromResult (fail)",
-			nilable: nilable.FromResult(result.Fail[int](errors.New("some error"))),
+			nilable: nilable.FromResult(result.Error[int](errors.New("some error"))),
 		},
 		{
 			desc: "Attempt",

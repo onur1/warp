@@ -17,9 +17,9 @@ func ExampleResult() {
 	// an empty slice error.
 	head := func(as []float64) data.Result[float64] {
 		if len(as) == 0 {
-			return result.Fail[float64](errEmptySlice)
+			return result.Error[float64](errEmptySlice)
 		}
-		return result.Succeed(as[0])
+		return result.Ok(as[0])
 	}
 
 	errDivByZero := errors.New("cannot divide by zero")
@@ -28,9 +28,9 @@ func ExampleResult() {
 	// division by zero error if 0 is encountered.
 	inverse := func(n float64) data.Result[float64] {
 		if n == 0 {
-			return result.Fail[float64](errDivByZero)
+			return result.Error[float64](errDivByZero)
 		}
-		return result.Succeed(1 / n)
+		return result.Ok(1 / n)
 	}
 
 	double := func(n float64) float64 {

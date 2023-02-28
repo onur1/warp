@@ -5,15 +5,15 @@ import (
 	"github.com/onur1/data"
 )
 
-// Succeed creates a result which always returns a value.
-func Succeed[A any](a A) data.Result[A] {
+// Ok creates a result which always returns a value.
+func Ok[A any](a A) data.Result[A] {
 	return func() (A, error) {
 		return a, nil
 	}
 }
 
-// Fail creates a result which always fails with an error.
-func Fail[A any](err error) data.Result[A] {
+// Error creates a result which always fails with an error.
+func Error[A any](err error) data.Result[A] {
 	return func() (a A, _ error) {
 		return a, err
 	}
@@ -21,18 +21,17 @@ func Fail[A any](err error) data.Result[A] {
 
 // Map creates a result by applying a function on a succeeding result.
 func Map[A, B any](fa data.Result[A], f func(A) B) data.Result[B] {
-	a, err := fa()
-	if err != nil {
-		return Fail[B](err)
+	if a, err := fa(); err != nil {
+		return Error[B](err)
+	} else {
+		return Ok(f(a))
 	}
-	return Succeed(f(a))
 }
 
 // MapError creates a result by applying a function on a failing result.
 func MapError[A any](fa data.Result[A], f func(error) error) data.Result[A] {
-	_, err := fa()
-	if err != nil {
-		return Fail[A](f(err))
+	if _, err := fa(); err != nil {
+		return Error[A](f(err))
 	}
 	return fa
 }
@@ -43,40 +42,39 @@ func Ap[A, B any](fab data.Result[func(A) B], fa data.Result[A]) data.Result[B] 
 	var (
 		err error
 		ab  func(A) B
-		a   A
 	)
 
-	ab, err = fab()
-	if err != nil {
-		return Fail[B](err)
+	if ab, err = fab(); err != nil {
+		return Error[B](err)
 	}
 
-	a, err = fa()
-	if err != nil {
-		return Fail[B](err)
+	var a A
+
+	if a, err = fa(); err != nil {
+		return Error[B](err)
 	}
 
-	return Succeed(ab(a))
+	return Ok(ab(a))
 }
 
 // Chain creates a result which combines two results in sequence, using the
 // return value of one result to determine the next one.
 func Chain[A, B any](ma data.Result[A], f func(A) data.Result[B]) data.Result[B] {
-	a, err := ma()
-	if err != nil {
-		return Fail[B](err)
+	if a, err := ma(); err != nil {
+		return Error[B](err)
+	} else {
+		return f(a)
 	}
-	return f(a)
 }
 
 // Bimap creates a result by mapping a pair of functions over an error or a value
 // contained in a result.
 func Bimap[A, B any](fa data.Result[A], f func(error) error, g func(A) B) data.Result[B] {
-	a, err := fa()
-	if err != nil {
-		return Fail[B](f(err))
+	if a, err := fa(); err != nil {
+		return Error[B](f(err))
+	} else {
+		return Ok(g(a))
 	}
-	return Succeed(g(a))
 }
 
 // ApFirst creates a result by combining two effectful computations, keeping
@@ -113,7 +111,7 @@ func Fold[A, B any](ma data.Result[A], onError func(error) B, onSuccess func(A) 
 // for nil values.
 func FromNilable[A any](ma data.Nilable[A], onNil func() error) data.Result[A] {
 	if ma == nil {
-		return Fail[A](onNil())
+		return Error[A](onNil())
 	}
-	return Succeed(*ma)
+	return Ok(*ma)
 }

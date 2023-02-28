@@ -12,24 +12,24 @@ import (
 
 // Succeed creates a future that succeeds with a value.
 func Succeed[A any](a A) data.Future[A] {
-	return data.Future[A](event.Map(event.Of(a), result.Succeed[A]))
+	return data.Future[A](event.Map(event.Of(a), result.Ok[A]))
 }
 
 // Fail creates a future that fails with an error.
 func Fail[A any](err error) data.Future[A] {
-	return data.Future[A](event.Map(event.Of(err), result.Fail[A]))
+	return data.Future[A](event.Map(event.Of(err), result.Error[A]))
 }
 
 // Success creates a future which always succeeds with values received from
 // a source event.
 func Success[A any](ea data.Event[A]) data.Future[A] {
-	return data.Future[A](event.Map(ea, result.Succeed[A]))
+	return data.Future[A](event.Map(ea, result.Ok[A]))
 }
 
 // Failure creates a future which always fails with errors received from
 // a source event.
 func Failure[A any](ea data.Event[error]) data.Future[A] {
-	return data.Future[A](event.Map(ea, result.Fail[A]))
+	return data.Future[A](event.Map(ea, result.Error[A]))
 }
 
 // After creates a future that succeeds after a timeout.
@@ -61,7 +61,7 @@ func Attempt[A any](ra data.Result[A], onPanic func(any) error) data.Future[A] {
 				default:
 					select {
 					case <-done:
-					case sub <- result.Fail[A](onPanic(r)):
+					case sub <- result.Error[A](onPanic(r)):
 					}
 				}
 			}
@@ -74,7 +74,7 @@ func Attempt[A any](ra data.Result[A], onPanic func(any) error) data.Future[A] {
 			default:
 				select {
 				case <-done:
-				case sub <- result.Fail[A](err):
+				case sub <- result.Error[A](err):
 				}
 			}
 			return
@@ -85,7 +85,7 @@ func Attempt[A any](ra data.Result[A], onPanic func(any) error) data.Future[A] {
 		default:
 			select {
 			case <-done:
-			case sub <- result.Succeed(a):
+			case sub <- result.Ok(a):
 			}
 		}
 	}
