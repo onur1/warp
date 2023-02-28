@@ -16,10 +16,15 @@ func Map[A, B any](fa data.Event[A], f func(A) B) data.Event[B] {
 		defer close(sub)
 
 		var (
-			as   = make(chan A)
-			a    A
-			done = ctx.Done()
+			as = make(chan A)
+			a  A
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		go fa(ctx, as)
 
@@ -51,8 +56,13 @@ func Ap[A, B any](fab data.Event[func(A) B], fa data.Event[A]) data.Event[B] {
 			ab       func(A) B
 			a        A
 			ok       bool
-			done     = ctx.Done()
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		go fab(ctx, abs)
 		go fa(ctx, as)
@@ -112,13 +122,18 @@ func Chain[A, B any](fa data.Event[A], f func(A) data.Event[B]) data.Event[B] {
 		defer close(sub)
 
 		var (
-			as   = make(chan A)
-			bs   chan B
-			a    A
-			b    B
-			fb   data.Event[B]
-			done = ctx.Done()
+			as = make(chan A)
+			bs chan B
+			a  A
+			b  B
+			fb data.Event[B]
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		go fa(ctx, as)
 
@@ -200,8 +215,13 @@ func SampleOn[A, B any](fa data.Event[A], fab data.Event[func(A) B]) data.Event[
 			aLatest A
 			ab      func(A) B
 			ok      bool
-			done    = ctx.Done()
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		go fa(ctx, as)
 		go fab(ctx, abs)
@@ -263,12 +283,17 @@ func Alt[A any](x data.Event[A], y data.Event[A]) data.Event[A] {
 		defer close(sub)
 
 		var (
-			xs   = make(chan A)
-			ys   = make(chan A)
-			a    A
-			ok   bool
-			done = ctx.Done()
+			xs = make(chan A)
+			ys = make(chan A)
+			a  A
+			ok bool
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		go x(ctx, xs)
 		go y(ctx, ys)
@@ -322,10 +347,15 @@ func Filter[A any](fa data.Event[A], predicate data.Predicate[A]) data.Event[A] 
 		defer close(sub)
 
 		var (
-			as   = make(chan A)
-			a    A
-			done = ctx.Done()
+			as = make(chan A)
+			a  A
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		go fa(ctx, as)
 
@@ -369,8 +399,13 @@ func CountWindow[A any](fa data.Event[A], dur time.Duration) data.Event[int] {
 		var (
 			counter = sliding.NewCounter(dur)
 			as      = make(chan A)
-			done    = ctx.Done()
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		defer counter.Stop()
 
@@ -400,11 +435,16 @@ func Take[A any](fa data.Event[A], n int) data.Event[A] {
 		defer close(sub)
 
 		var (
-			as   = make(chan A)
-			a    A
-			i    = 0
-			done = ctx.Done()
+			as = make(chan A)
+			a  A
+			i  = 0
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		go fa(ctx, as)
 
@@ -439,8 +479,13 @@ func Fold[A, B any](fa data.Event[A], b B, f func(A, B) B) data.Event[B] {
 			as     = make(chan A)
 			a      A
 			result = b
-			done   = ctx.Done()
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		go fa(ctx, as)
 
@@ -465,12 +510,18 @@ func Of[A any](a A) data.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
+
 		select {
-		case <-ctx.Done():
+		case <-done:
 			return
 		default:
 			select {
-			case <-ctx.Done():
+			case <-done:
 			case sub <- a:
 			}
 		}
@@ -486,8 +537,13 @@ func Interval(dur time.Duration) data.Event[time.Time] {
 			ticker = time.NewTicker(dur)
 			t      time.Time
 			ok     bool
-			done   = ctx.Done()
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		defer ticker.Stop()
 
@@ -526,10 +582,15 @@ func From[A any](as []A) data.Event[A] {
 		defer close(sub)
 
 		var (
-			i    = 0
-			l    = len(as)
-			done = ctx.Done()
+			i = 0
+			l = len(as)
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		for ; i < l; i++ {
 			select {
@@ -581,8 +642,13 @@ func After[A any](dur time.Duration, a A) data.Event[A] {
 
 		var (
 			ticker = time.NewTicker(dur)
-			done   = ctx.Done()
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		defer ticker.Stop()
 
@@ -619,11 +685,16 @@ func MapNotNil[A, B any](fa data.Event[A], f func(A) *B) data.Event[B] {
 		defer close(sub)
 
 		var (
-			as   = make(chan A)
-			a    A
-			b    *B
-			done = ctx.Done()
+			as = make(chan A)
+			a  A
+			b  *B
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		go fa(ctx, as)
 
@@ -683,10 +754,15 @@ func WithTime[A any](fa data.Event[A]) data.Event[*Time[A]] {
 		defer close(sub)
 
 		var (
-			as   = make(chan A)
-			a    A
-			done = ctx.Done()
+			as = make(chan A)
+			a  A
 		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
 
 		go fa(ctx, as)
 
