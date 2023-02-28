@@ -8,7 +8,7 @@
 // detail.
 //
 // Data types must obey certain laws to implement a [typeclass] instance (which
-// contains implementations of functions defined in a typeclass, such as [functors, applicatives and monads],
+// contains implementations of functions defined in a typeclass, such as [functors, applicatives and monads]),
 // specialized to a particular type. These laws are rooted in [category theory]
 // and together they form a type system that ensures safety and composability.
 //
