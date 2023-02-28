@@ -469,6 +469,44 @@ func Take[A any](fa data.Event[A], n int) data.Event[A] {
 	}
 }
 
+
+// Once creates an event which emits values from an event for once and the last
+// time when a predicate holds.
+func Once[A any](fa data.Event[A], predicate data.Predicate[A]) data.Event[A] {
+	return func(ctx context.Context, sub chan<- A) {
+		defer close(sub)
+
+		var (
+			as = make(chan A)
+			a  A
+		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
+
+		go fa(ctx, as)
+
+		for a = range as {
+			select {
+			case <-done:
+				return
+			default:
+				if !predicate(a) {
+					continue
+				}
+				select {
+				case <-done:
+				case sub <- a:
+				}
+				return
+			}
+		}
+	}
+}
+
 // Fold creates an event which combines the values from a source event by applying
 // a function starting with an initial value.
 func Fold[A, B any](fa data.Event[A], b B, f func(A, B) B) data.Event[B] {
