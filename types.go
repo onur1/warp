@@ -1,6 +1,21 @@
 // Package data provides a set of useful data types for working with different
 // types of data, such as data that contains an error, data that doesn't exist,
 // data that doesn't exist yet, data that keeps changing, and etc.
+//
+// The practical part of [functional programming] is all about higher level
+// abstractions (like these types that describe some nature of data) and combining
+// their behaviors to gain properties and functionality to deal with data in more
+// detail.
+//
+// Data types must obey certain laws to implement a [typeclass] instance (which
+// contains implementations of functions defined in a typeclass, such as [functors, applicatives and monads],
+// specialized to a particular type. These laws are rooted in [category theory]
+// and together they form a type system that ensures safety and composability.
+//
+// [functional programming]: https://github.com/enricopolanski/functional-programming
+// [typeclass]: https://wiki.haskell.org/Typeclassopedia
+// [functors, applicatives and monads]: https://www.adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html
+// [category theory]: https://www.youtube.com/watch?v=gui_SE8rJUM
 package data
 
 import (
