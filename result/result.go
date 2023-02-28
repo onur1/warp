@@ -19,6 +19,10 @@ func Error[A any](err error) data.Result[A] {
 	}
 }
 
+func Zero[A any]() (a A, _ error) {
+	return
+}
+
 // Map creates a result by applying a function on a succeeding result.
 func Map[A, B any](fa data.Result[A], f func(A) B) data.Result[B] {
 	if a, err := fa(); err != nil {
