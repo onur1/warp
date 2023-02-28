@@ -317,7 +317,7 @@ func Alt[A any](x data.Event[A], y data.Event[A]) data.Event[A] {
 }
 
 // Filter creates an event which emits values from a source event when a predicate holds.
-func Filter[A any](fa data.Event[A], predicate func(A) bool) data.Event[A] {
+func Filter[A any](fa data.Event[A], predicate data.Predicate[A]) data.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
