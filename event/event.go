@@ -546,6 +546,34 @@ func From[A any](as []A) data.Event[A] {
 	}
 }
 
+var empty = struct{}{}
+
+// Empty creates an event which emits an empty struct forever.
+func Empty() data.Event[struct{}] {
+	return func(ctx context.Context, sub chan<- struct{}) {
+		defer close(sub)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
+
+		for {
+			select {
+			case <-done:
+				return
+			default:
+				select {
+				case <-done:
+					return
+				case sub <- empty:
+				}
+			}
+		}
+	}
+}
+
 // After creates an event which emits a value after waiting for the specified duration.
 func After[A any](dur time.Duration, a A) data.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
