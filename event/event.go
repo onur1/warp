@@ -469,6 +469,41 @@ func Take[A any](fa data.Event[A], n int) data.Event[A] {
 	}
 }
 
+// Until creates an event which emits values from an event until a predicate holds.
+func Until[A any](fa data.Event[A], predicate data.Predicate[A]) data.Event[A] {
+	return func(ctx context.Context, sub chan<- A) {
+		defer close(sub)
+
+		var (
+			as = make(chan A)
+			a  A
+		)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
+
+		go fa(ctx, as)
+
+		for a = range as {
+			select {
+			case <-done:
+				return
+			default:
+				if predicate(a) {
+					return
+				}
+				select {
+				case <-done:
+					return
+				case sub <- a:
+				}
+			}
+		}
+	}
+}
 
 // Once creates an event which emits values from an event for once and the last
 // time when a predicate holds.
