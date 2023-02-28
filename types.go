@@ -3,7 +3,7 @@
 // data that doesn't exist yet, data that keeps changing, and etc.
 //
 // The practical part of [functional programming] is all about higher level
-// abstractions (like these types that describe some nature of data) and combining
+// abstractions, like these types that describe some nature of data, and combining
 // their behaviors to gain properties and functionality to deal with data in more
 // detail.
 //
