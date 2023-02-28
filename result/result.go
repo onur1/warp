@@ -111,6 +111,14 @@ func Fold[A, B any](ma data.Result[A], onError func(error) B, onSuccess func(A) 
 	}
 }
 
+func Fork[A any](ma data.Result[A], onError func(error), onSuccess func(A)) {
+	if a, err := ma(); err != nil {
+		onError(err)
+	} else {
+		onSuccess(a)
+	}
+}
+
 // FromNilable creates a result from a nilable, returning the supplied error
 // for nil values.
 func FromNilable[A any](ma data.Nilable[A], onNil func() error) data.Result[A] {
