@@ -139,6 +139,56 @@ func TestResult(t *testing.T) {
 			}),
 			expectedErr: errFailed,
 		},
+		{
+			desc: "OrElse (error)",
+			result: result.OrElse(result.Error[int](errFailed), func(err error) data.Result[int] {
+				return result.Ok(555)
+			}),
+			expected: 555,
+		},
+		{
+			desc: "OrElse",
+			result: result.OrElse(result.Ok(666), func(err error) data.Result[int] {
+				return result.Ok(555)
+			}),
+			expected: 666,
+		},
+		{
+			desc: "GetOrElse (error)",
+			result: result.Ok(
+				result.GetOrElse(result.Error[int](errFailed), func(err error) int {
+					return 444
+				}),
+			),
+			expected: 444,
+		},
+		{
+			desc: "GetOrElse",
+			result: result.Ok(
+				result.GetOrElse(result.Ok(42), func(err error) int {
+					return 444
+				}),
+			),
+			expected: 42,
+		},
+		{
+			desc: "FilterOrElse",
+			result: result.FilterOrElse(result.Ok(42), func(x int) bool {
+				return x > 40
+			}, func(x int) error {
+				return fmt.Errorf("filterOrElse: %d is not ok", x)
+			}),
+			expected: 42,
+		},
+		{
+			desc: "FilterOrElse (false)",
+			result: result.FilterOrElse(result.Ok(2), func(x int) bool {
+				return x > 40
+			}, func(x int) error {
+				return fmt.Errorf("filterOrElse: %d is not ok", x)
+			}),
+			expectedErr: errors.New("filterOrElse: 2 is not ok"),
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {

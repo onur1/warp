@@ -111,6 +111,31 @@ func Fold[A, B any](ma data.Result[A], onError func(error) B, onSuccess func(A) 
 	}
 }
 
+func GetOrElse[A any](ma data.Result[A], onError func(error) A) A {
+	if a, err := ma(); err != nil {
+		return onError(err)
+	} else {
+		return a
+	}
+}
+
+func OrElse[A any](ma data.Result[A], onError func(error) data.Result[A]) data.Result[A] {
+	if _, err := ma(); err != nil {
+		return onError(err)
+	}
+	return ma
+}
+
+func FilterOrElse[A any](ma data.Result[A], predicate data.Predicate[A], onFalse func(A) error) data.Result[A] {
+	return Chain(ma, func(a A) data.Result[A] {
+		if predicate(a) {
+			return Ok(a)
+		} else {
+			return Error[A](onFalse(a))
+		}
+	})
+}
+
 func Fork[A any](ma data.Result[A], onError func(error), onSuccess func(A)) {
 	if a, err := ma(); err != nil {
 		onError(err)
