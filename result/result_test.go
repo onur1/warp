@@ -34,27 +34,27 @@ func TestResult(t *testing.T) {
 			expectedErr: errFailed,
 		},
 		{
-			desc:     "Map (succeed)",
+			desc:     "Map",
 			result:   result.Map(result.Ok(1), double),
 			expected: 2,
 		},
 		{
-			desc:        "Map (fail)",
+			desc:        "Map (error)",
 			result:      result.Map(result.Error[int](errFailed), double),
 			expectedErr: errFailed,
 		},
 		{
-			desc:     "MapError (succeed)",
+			desc:     "MapError",
 			result:   result.MapError(result.Ok(42), wrappedError),
 			expected: 42,
 		},
 		{
-			desc:        "MapError (fail)",
+			desc:        "MapError (error)",
 			result:      result.MapError(result.Error[int](errFailed), wrappedError),
 			expectedErr: errWrapped,
 		},
 		{
-			desc: "Bimap (succeed)",
+			desc: "Bimap",
 			result: result.Map(
 				result.Bimap(result.Ok(-1), wrappedError, isPositive),
 				func(n bool) int {
@@ -68,7 +68,7 @@ func TestResult(t *testing.T) {
 			expected: 2,
 		},
 		{
-			desc: "Bimap (fail)",
+			desc: "Bimap (error)",
 			result: result.Map(
 				result.Bimap(result.Error[int](errFailed), wrappedError, isPositive),
 				func(n bool) int {
@@ -82,44 +82,44 @@ func TestResult(t *testing.T) {
 			expectedErr: errWrapped,
 		},
 		{
-			desc:     "Ap (succeed)",
+			desc:     "Ap",
 			result:   result.Ap(result.Ok(double), result.Ok(42)),
 			expected: 84,
 		},
 		{
-			desc:        "Ap (fail)",
+			desc:        "Ap (error)",
 			result:      result.Ap(result.Ok(double), result.Error[int](errFailed)),
 			expectedErr: errFailed,
 		},
 		{
-			desc:     "ApFirst (succeed)",
+			desc:     "ApFirst",
 			result:   result.ApFirst(result.Ok(1), result.Ok(2)),
 			expected: 1,
 		},
 		{
-			desc:        "ApFirst (fail)",
+			desc:        "ApFirst (error)",
 			result:      result.ApFirst(result.Error[int](errFailed), result.Ok(2)),
 			expectedErr: errFailed,
 		},
 		{
-			desc:     "ApSecond (succeed)",
+			desc:     "ApSecond",
 			result:   result.ApSecond(result.Ok(1), result.Ok(2)),
 			expected: 2,
 		},
 		{
-			desc:        "ApSecond (fail)",
+			desc:        "ApSecond (error)",
 			result:      result.ApSecond(result.Ok(1), result.Error[int](errFailed)),
 			expectedErr: errFailed,
 		},
 		{
-			desc: "Chain (succeed)",
+			desc: "Chain",
 			result: result.Chain(result.Ok(42), func(a int) data.Result[int] {
 				return result.Ok(a + 1)
 			}),
 			expected: 43,
 		},
 		{
-			desc: "Chain (fail)",
+			desc: "Chain (error)",
 			result: result.Chain(result.Error[int](errFailed), func(a int) data.Result[int] {
 				return result.Ok(a + 1)
 			}),
