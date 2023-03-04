@@ -71,6 +71,16 @@ func Chain[A, B any](ma data.Result[A], f func(A) data.Result[B]) data.Result[B]
 	}
 }
 
+// ChainFirst composes two results in sequence, using the return value of one result
+// to determine the next one, keeping only the first result.
+func ChainFirst[A, B any](ma data.Result[A], f func(A) data.Result[B]) data.Result[A] {
+	return Chain(ma, func(a A) data.Result[A] {
+		return Map(f(a), func(_ B) A {
+			return a
+		})
+	})
+}
+
 // Bimap creates a result by mapping a pair of functions over an error or a value
 // contained in a result.
 func Bimap[A, B any](fa data.Result[A], f func(error) error, g func(A) B) data.Result[B] {
