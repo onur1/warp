@@ -84,21 +84,13 @@ func Bimap[A, B any](fa data.Result[A], f func(error) error, g func(A) B) data.R
 // ApFirst creates a result by combining two effectful computations, keeping
 // only the result of the first.
 func ApFirst[A, B any](fa data.Result[A], fb data.Result[B]) data.Result[A] {
-	return Ap(Map(fa, func(a A) func(B) A {
-		return func(_ B) A {
-			return a
-		}
-	}), fb)
+	return Ap(Map(fa, fst[A, B]), fb)
 }
 
 // ApSecond creates a result by combining two effectful computations, keeping
 // only the result of the second.
 func ApSecond[A, B any](fa data.Result[A], fb data.Result[B]) data.Result[B] {
-	return Ap(Map(fa, func(_ A) func(B) B {
-		return func(b B) B {
-			return b
-		}
-	}), fb)
+	return Ap(Map(fa, snd[A, B]), fb)
 }
 
 // Fold takes two functions and a result and returns a value by applying
@@ -151,4 +143,16 @@ func FromNilable[A any](ma data.Nilable[A], onNil func() error) data.Result[A] {
 		return Error[A](onNil())
 	}
 	return Ok(*ma)
+}
+
+func fst[A, B any](a A) func(B) A {
+	return func(_ B) A {
+		return a
+	}
+}
+
+func snd[A, B any](_ A) func(B) B {
+	return func(b B) B {
+		return b
+	}
 }
