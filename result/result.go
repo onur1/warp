@@ -116,7 +116,7 @@ func Fold[A, B any](ma data.Result[A], onError func(error) B, onSuccess func(A) 
 }
 
 // GetOrElse creates a result which can be used to recover from a failing result
-// with a default value.
+// with a new value.
 func GetOrElse[A any](ma data.Result[A], onError func(error) A) A {
 	if a, err := ma(); err != nil {
 		return onError(err)
