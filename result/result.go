@@ -5,7 +5,7 @@ import (
 	"github.com/onur1/data"
 )
 
-// Ok creates a result which always returns a value.
+// Ok creates a result which never fails and returns a value of type A.
 func Ok[A any](a A) data.Result[A] {
 	return func() (A, error) {
 		return a, nil
@@ -19,6 +19,8 @@ func Error[A any](err error) data.Result[A] {
 	}
 }
 
+// Zero creates a result which never fails and returns a zero value
+// of the type that it is initialized with.
 func Zero[A any]() (a A, _ error) {
 	return
 }
@@ -113,6 +115,8 @@ func Fold[A, B any](ma data.Result[A], onError func(error) B, onSuccess func(A) 
 	}
 }
 
+// GetOrElse creates a result which can be used to recover from a failing result
+// with a default value.
 func GetOrElse[A any](ma data.Result[A], onError func(error) A) A {
 	if a, err := ma(); err != nil {
 		return onError(err)
@@ -121,6 +125,8 @@ func GetOrElse[A any](ma data.Result[A], onError func(error) A) A {
 	}
 }
 
+// OrElse creates a result which can be used to recover from a failing result
+// by switching to a new result.
 func OrElse[A any](ma data.Result[A], onError func(error) data.Result[A]) data.Result[A] {
 	if _, err := ma(); err != nil {
 		return onError(err)
@@ -128,6 +134,8 @@ func OrElse[A any](ma data.Result[A], onError func(error) data.Result[A]) data.R
 	return ma
 }
 
+// FilterOrElse creates a result which can be used to fail with an error unless
+// a predicate holds on a succeeding result.
 func FilterOrElse[A any](ma data.Result[A], predicate data.Predicate[A], onFalse func(A) error) data.Result[A] {
 	return Chain(ma, func(a A) data.Result[A] {
 		if predicate(a) {
@@ -138,6 +146,7 @@ func FilterOrElse[A any](ma data.Result[A], predicate data.Predicate[A], onFalse
 	})
 }
 
+// Fork is like Fold but it doesn't have a return value.
 func Fork[A any](ma data.Result[A], onError func(error), onSuccess func(A)) {
 	if a, err := ma(); err != nil {
 		onError(err)
