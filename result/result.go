@@ -77,9 +77,7 @@ func Chain[A, B any](ma data.Result[A], f func(A) data.Result[B]) data.Result[B]
 // to determine the next one, keeping only the first result.
 func ChainFirst[A, B any](ma data.Result[A], f func(A) data.Result[B]) data.Result[A] {
 	return Chain(ma, func(a A) data.Result[A] {
-		return Map(f(a), func(_ B) A {
-			return a
-		})
+		return Map(f(a), fst[A, B](a))
 	})
 }
 
@@ -165,12 +163,12 @@ func FromNilable[A any](ma data.Nilable[A], onNil func() error) data.Result[A] {
 }
 
 func fst[A, B any](a A) func(B) A {
-	return func(_ B) A {
+	return func(B) A {
 		return a
 	}
 }
 
-func snd[A, B any](_ A) func(B) B {
+func snd[A, B any](A) func(B) B {
 	return func(b B) B {
 		return b
 	}
