@@ -5,16 +5,16 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/onur1/fpgo"
-	"github.com/onur1/fpgo/nilable"
-	"github.com/onur1/fpgo/result"
+	"github.com/onur1/gofp"
+	"github.com/onur1/gofp/nilable"
+	"github.com/onur1/gofp/result"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNilable(t *testing.T) {
 	testCases := []struct {
 		desc     string
-		nilable  fpgo.Nilable[int]
+		nilable  gofp.Nilable[int]
 		expected int
 	}{
 		{
@@ -74,7 +74,7 @@ func TestNilable(t *testing.T) {
 	}
 }
 
-func assertEq(t *testing.T, v fpgo.Nilable[int], expected int) {
+func assertEq(t *testing.T, v gofp.Nilable[int], expected int) {
 	if v == nil {
 		assert.Equal(t, expected, 0)
 	} else {

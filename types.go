@@ -1,5 +1,5 @@
-// Package fpgo provides experimental monads.
-package fpgo
+// Package gofp provides experimental monads.
+package gofp
 
 import (
 	"context"

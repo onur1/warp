@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/onur1/fpgo"
-	"github.com/onur1/fpgo/result"
+	"github.com/onur1/gofp"
+	"github.com/onur1/gofp/result"
 	"github.com/onur1/ring"
 )
 
@@ -36,7 +36,7 @@ func (s *par[A]) Limit() int {
 }
 
 type indexed[A any] interface {
-	Result() fpgo.Result[A]
+	Result() gofp.Result[A]
 	Index() int
 }
 
@@ -57,7 +57,7 @@ func newIndexedError[A any](index int, err error) indexed[A] {
 	return indexedError[A]{error: err, index: index}
 }
 
-func (va indexedError[A]) Result() fpgo.Result[A] {
+func (va indexedError[A]) Result() gofp.Result[A] {
 	return result.Error[A](va.error)
 }
 
@@ -70,7 +70,7 @@ func (va indexedValue[A]) Index() int {
 	return va.index
 }
 
-func (va indexedValue[A]) Result() fpgo.Result[A] {
+func (va indexedValue[A]) Result() gofp.Result[A] {
 	return result.Ok(va.a)
 }
 
@@ -80,13 +80,13 @@ func newIndexedValue[A any](index int, a A) indexed[A] {
 
 // Parallel creates a Future which emits a stream of Results in parallel while keeping
 // the sequence of output same as the order of input.
-func Parallel[A any](fas fpgo.Future[A], parallelism int) fpgo.Future[A] {
-	return func(ctx context.Context, sub chan<- fpgo.Result[A]) {
+func Parallel[A any](fas gofp.Future[A], parallelism int) gofp.Future[A] {
+	return func(ctx context.Context, sub chan<- gofp.Result[A]) {
 		defer close(sub)
 
 		var (
-			cra = make(chan fpgo.Result[A])
-			fa  fpgo.Result[A]
+			cra = make(chan gofp.Result[A])
+			fa  gofp.Result[A]
 			ok  bool
 		)
 
@@ -99,7 +99,7 @@ func Parallel[A any](fas fpgo.Future[A], parallelism int) fpgo.Future[A] {
 		go fas(ctx, cra)
 
 		var (
-			s       = newPar[fpgo.Result[A]](parallelism)
+			s       = newPar[gofp.Result[A]](parallelism)
 			writes  = make(chan indexed[A])
 			reads   = cra
 			limit   = s.Limit()
@@ -133,7 +133,7 @@ func Parallel[A any](fas fpgo.Future[A], parallelism int) fpgo.Future[A] {
 						break
 					}
 
-					go func(fa fpgo.Result[A], pos int) {
+					go func(fa gofp.Result[A], pos int) {
 						a, err := fa(ctx)
 						if err != nil {
 							writes <- newIndexedError[A](pos, err)

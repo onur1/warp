@@ -1,6 +1,6 @@
-# fpgo
+# gofp
 
-Package fpgo provides experimental monads in Go.
+Package gofp provides experimental monads in Go.
 
 ## Types
 

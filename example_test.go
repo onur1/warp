@@ -1,13 +1,13 @@
-package fpgo_test
+package gofp_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
 
-	"github.com/onur1/fpgo"
-	"github.com/onur1/fpgo/event"
-	"github.com/onur1/fpgo/result"
+	"github.com/onur1/gofp"
+	"github.com/onur1/gofp/event"
+	"github.com/onur1/gofp/result"
 )
 
 func ExampleResult() {
@@ -15,7 +15,7 @@ func ExampleResult() {
 
 	// head returns the first value contained in a slice, or fails with
 	// an empty slice error.
-	head := func(as []float64) fpgo.Result[float64] {
+	head := func(as []float64) gofp.Result[float64] {
 		if len(as) == 0 {
 			return result.Error[float64](errEmptySlice)
 		}
@@ -26,7 +26,7 @@ func ExampleResult() {
 
 	// inverse returns an inverse of a number, or fails with
 	// division by zero error if 0 is encountered.
-	inverse := func(n float64) fpgo.Result[float64] {
+	inverse := func(n float64) gofp.Result[float64] {
 		if n == 0 {
 			return result.Error[float64](errDivByZero)
 		}

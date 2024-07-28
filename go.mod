@@ -1,4 +1,4 @@
-module github.com/onur1/fpgo
+module github.com/onur1/gofp
 
 go 1.19
 

@@ -5,16 +5,16 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/onur1/fpgo"
-	"github.com/onur1/fpgo/event"
-	"github.com/onur1/fpgo/nilable"
+	"github.com/onur1/gofp"
+	"github.com/onur1/gofp/event"
+	"github.com/onur1/gofp/nilable"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEvent(t *testing.T) {
 	testCases := []struct {
 		desc      string
-		event     fpgo.Event[int]
+		event     gofp.Event[int]
 		expected  []int
 		unordered bool
 	}{
@@ -35,7 +35,7 @@ func TestEvent(t *testing.T) {
 		},
 		{
 			desc: "Chain",
-			event: event.Chain(event.From([]int{1, 2, 3}), func(a int) fpgo.Event[int] {
+			event: event.Chain(event.From([]int{1, 2, 3}), func(a int) gofp.Event[int] {
 				return event.From([]int{a, a + 1})
 			}),
 			expected: []int{1, 2, 2, 3, 3, 4},
@@ -110,7 +110,7 @@ func TestEvent(t *testing.T) {
 	}
 }
 
-func assertEq(t *testing.T, dequeue fpgo.Event[int], expected []int, unordered bool) {
+func assertEq(t *testing.T, dequeue gofp.Event[int], expected []int, unordered bool) {
 	r := make(chan int)
 
 	go dequeue(context.TODO(), r)
@@ -153,7 +153,7 @@ func div(b, a int) int {
 	return b / a
 }
 
-func doublePositive(n int) fpgo.Nilable[int] {
+func doublePositive(n int) gofp.Nilable[int] {
 	if !isPositive(n) {
 		return nil
 	}
