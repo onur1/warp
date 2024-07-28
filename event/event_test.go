@@ -4,17 +4,17 @@ import (
 	"context"
 	"sort"
 	"testing"
-	"time"
 
-	"github.com/onur1/data"
-	"github.com/onur1/data/event"
+	"github.com/onur1/fpgo"
+	"github.com/onur1/fpgo/event"
+	"github.com/onur1/fpgo/nilable"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEvent(t *testing.T) {
 	testCases := []struct {
 		desc      string
-		event     data.Event[int]
+		event     fpgo.Event[int]
 		expected  []int
 		unordered bool
 	}{
@@ -35,7 +35,7 @@ func TestEvent(t *testing.T) {
 		},
 		{
 			desc: "Chain",
-			event: event.Chain(event.From([]int{1, 2, 3}), func(a int) data.Event[int] {
+			event: event.Chain(event.From([]int{1, 2, 3}), func(a int) fpgo.Event[int] {
 				return event.From([]int{a, a + 1})
 			}),
 			expected: []int{1, 2, 2, 3, 3, 4},
@@ -69,11 +69,11 @@ func TestEvent(t *testing.T) {
 		{
 			desc: "WithLast",
 			event: event.Map(
-				event.WithLast(event.From([]int{1, 41})), func(l *event.Last[int]) int {
-					if l.Last == nil {
+				event.WithLast(event.From([]int{1, 41})), func(l event.Last[int]) int {
+					if l.Last == 0 {
 						return l.Now
 					}
-					return add(l.Now, *(l.Last))
+					return add(l.Now, l.Last)
 				}),
 			expected: []int{1, 42},
 		},
@@ -93,20 +93,14 @@ func TestEvent(t *testing.T) {
 			expected: []int{3},
 		},
 		{
-			desc: "CountWindow",
-			event: event.CountWindow(
-				event.Alt(
-					event.From([]int{4, 5}),
-					event.After(time.Millisecond*100, 42),
-				),
-				time.Millisecond*77,
-			),
-			expected: []int{1, 2, 1},
-		},
-		{
 			desc:     "Take",
 			event:    event.Take(event.From([]int{4, 5, 6}), 2),
 			expected: []int{4, 5},
+		},
+		{
+			desc:     "FilterMap",
+			event:    event.FilterMap(event.From([]int{-3, 4, -1, 5, 0, 6}), doublePositive),
+			expected: []int{8, 10, 12},
 		},
 	}
 	for _, tC := range testCases {
@@ -116,7 +110,7 @@ func TestEvent(t *testing.T) {
 	}
 }
 
-func assertEq(t *testing.T, dequeue data.Event[int], expected []int, unordered bool) {
+func assertEq(t *testing.T, dequeue fpgo.Event[int], expected []int, unordered bool) {
 	r := make(chan int)
 
 	go dequeue(context.TODO(), r)
@@ -157,4 +151,11 @@ func add(b, a int) int {
 
 func div(b, a int) int {
 	return b / a
+}
+
+func doublePositive(n int) fpgo.Nilable[int] {
+	if !isPositive(n) {
+		return nil
+	}
+	return nilable.Some(n * 2)
 }

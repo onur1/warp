@@ -1,6 +1,6 @@
-# data
+# fpgo
 
-Package data provides experimental monadic data types in Go.
+Package fpgo provides experimental monads in Go.
 
 ## Types
 
@@ -36,11 +36,4 @@ a value which is encapsulated in a Result.
 
 ```go
 type Future[A any] Event[Result[A]]
-```
-
-A State represents a value which depends on itself through some computation, where
-parameter S is the state type to carry and A is the type of a return value.
-
-```go
-type State[S, A any] func(s S) (A, S)
 ```

@@ -3,15 +3,15 @@ package io_test
 import (
 	"testing"
 
-	"github.com/onur1/data"
-	"github.com/onur1/data/io"
+	"github.com/onur1/fpgo"
+	"github.com/onur1/fpgo/io"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestIO(t *testing.T) {
 	testCases := []struct {
 		desc     string
-		io       data.IO[int]
+		io       fpgo.IO[int]
 		expected int
 	}{
 		{
@@ -41,21 +41,21 @@ func TestIO(t *testing.T) {
 		},
 		{
 			desc: "Chain",
-			io: io.Chain(io.Of(2), func(a int) data.IO[int] {
+			io: io.Chain(io.Of(2), func(a int) fpgo.IO[int] {
 				return io.Of(double(a))
 			}),
 			expected: 4,
 		},
 		{
 			desc: "ChainFirst",
-			io: io.ChainFirst(io.Of(2), func(a int) data.IO[int] {
+			io: io.ChainFirst(io.Of(2), func(a int) fpgo.IO[int] {
 				return io.Of(double(a))
 			}),
 			expected: 2,
 		},
 		{
 			desc: "ChainRec",
-			io: io.ChainRec(0, func(n int) data.IO[func() (int, int, bool)] {
+			io: io.ChainRec(0, func(n int) fpgo.IO[func() (int, int, bool)] {
 				return io.Of(
 					func() (int, int, bool) {
 						if n < 15000 {

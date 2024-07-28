@@ -1,13 +1,14 @@
 package result_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/onur1/data"
-	"github.com/onur1/data/nilable"
-	"github.com/onur1/data/result"
+	"github.com/onur1/fpgo"
+	"github.com/onur1/fpgo/nilable"
+	"github.com/onur1/fpgo/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +20,7 @@ var (
 func TestResult(t *testing.T) {
 	testCases := []struct {
 		desc        string
-		result      data.Result[int]
+		result      fpgo.Result[int]
 		expected    int
 		expectedErr error
 	}{
@@ -113,14 +114,14 @@ func TestResult(t *testing.T) {
 		},
 		{
 			desc: "Chain",
-			result: result.Chain(result.Ok(42), func(a int) data.Result[int] {
+			result: result.Chain(result.Ok(42), func(a int) fpgo.Result[int] {
 				return result.Ok(a + 1)
 			}),
 			expected: 43,
 		},
 		{
 			desc: "Chain (error)",
-			result: result.Chain(result.Error[int](errFailed), func(a int) data.Result[int] {
+			result: result.Chain(result.Error[int](errFailed), func(a int) fpgo.Result[int] {
 				return result.Ok(a + 1)
 			}),
 			expectedErr: errFailed,
@@ -141,14 +142,14 @@ func TestResult(t *testing.T) {
 		},
 		{
 			desc: "OrElse (error)",
-			result: result.OrElse(result.Error[int](errFailed), func(err error) data.Result[int] {
+			result: result.OrElse(result.Error[int](errFailed), func(err error) fpgo.Result[int] {
 				return result.Ok(555)
 			}),
 			expected: 555,
 		},
 		{
 			desc: "OrElse",
-			result: result.OrElse(result.Ok(666), func(err error) data.Result[int] {
+			result: result.OrElse(result.Ok(666), func(err error) fpgo.Result[int] {
 				return result.Ok(555)
 			}),
 			expected: 666,
@@ -156,18 +157,22 @@ func TestResult(t *testing.T) {
 		{
 			desc: "GetOrElse (error)",
 			result: result.Ok(
-				result.GetOrElse(result.Error[int](errFailed), func(err error) int {
-					return 444
-				}),
+				result.GetOrElse(
+					context.TODO(),
+					result.Error[int](errFailed), func(err error) int {
+						return 444
+					}),
 			),
 			expected: 444,
 		},
 		{
 			desc: "GetOrElse",
 			result: result.Ok(
-				result.GetOrElse(result.Ok(42), func(err error) int {
-					return 444
-				}),
+				result.GetOrElse(
+					context.TODO(),
+					result.Ok(42), func(err error) int {
+						return 444
+					}),
 			),
 			expected: 42,
 		},
@@ -197,8 +202,8 @@ func TestResult(t *testing.T) {
 	}
 }
 
-func assertEq(t *testing.T, res data.Result[int], expected int, expectedErr error) {
-	x, err := res()
+func assertEq(t *testing.T, res fpgo.Result[int], expected int, expectedErr error) {
+	x, err := res(context.TODO())
 	if err != nil {
 		assert.Equal(t, expectedErr, err)
 	} else {

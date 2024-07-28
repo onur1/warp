@@ -5,13 +5,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/onur1/data"
-	"github.com/onur1/sliding"
+	"github.com/onur1/fpgo"
+	"github.com/onur1/fpgo/nilable"
 )
 
 // Map creates an event by applying a function on each value received from a source
 // event.
-func Map[A, B any](fa data.Event[A], f func(A) B) data.Event[B] {
+func Map[A, B any](fa fpgo.Event[A], f func(A) B) fpgo.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -45,7 +45,7 @@ func Map[A, B any](fa data.Event[A], f func(A) B) data.Event[B] {
 
 // Ap creates an event by applying the latest observed function from the first event on
 // each value received from the second event.
-func Ap[A, B any](fab data.Event[func(A) B], fa data.Event[A]) data.Event[B] {
+func Ap[A, B any](fab fpgo.Event[func(A) B], fa fpgo.Event[A]) fpgo.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -117,7 +117,7 @@ func Ap[A, B any](fab data.Event[func(A) B], fa data.Event[A]) data.Event[B] {
 
 // Chain creates an event which composes two events in sequence, using the return value
 // of the first event to determine the next one.
-func Chain[A, B any](fa data.Event[A], f func(A) data.Event[B]) data.Event[B] {
+func Chain[A, B any](fa fpgo.Event[A], f func(A) fpgo.Event[B]) fpgo.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -126,7 +126,7 @@ func Chain[A, B any](fa data.Event[A], f func(A) data.Event[B]) data.Event[B] {
 			bs chan B
 			a  A
 			b  B
-			fb data.Event[B]
+			fb fpgo.Event[B]
 		)
 
 		var done <-chan struct{}
@@ -162,7 +162,7 @@ func Chain[A, B any](fa data.Event[A], f func(A) data.Event[B]) data.Event[B] {
 // Reduce returns a value by applying a function on each value received from an event,
 // in order, passing in the value and the return value from the calculation on the
 // preceding element.
-func Reduce[A, B any](ctx context.Context, fa data.Event[A], b B, f func(B, A) B) B {
+func Reduce[A, B any](ctx context.Context, fa fpgo.Event[A], b B, f func(B, A) B) B {
 	as := make(chan A)
 
 	go fa(ctx, as)
@@ -179,7 +179,7 @@ func Reduce[A, B any](ctx context.Context, fa data.Event[A], b B, f func(B, A) B
 // ReduceRight applies a function against an accumulator and each observed value of
 // the event (from right-to-left) to reduce it to a single value.
 // Same as Reduce but applied from end to start.
-func ReduceRight[A, B any](ctx context.Context, fa data.Event[A], b B, f func(A, B) B) B {
+func ReduceRight[A, B any](ctx context.Context, fa fpgo.Event[A], b B, f func(A, B) B) B {
 	asc := make(chan A)
 
 	go fa(ctx, asc)
@@ -204,7 +204,7 @@ func ReduceRight[A, B any](ctx context.Context, fa data.Event[A], b B, f func(A,
 
 // SampleOn creates an event which samples the latest values from the first event at
 // the times when the second event fires.
-func SampleOn[A, B any](fa data.Event[A], fab data.Event[func(A) B]) data.Event[B] {
+func SampleOn[A, B any](fa fpgo.Event[A], fab fpgo.Event[func(A) B]) fpgo.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -233,31 +233,38 @@ func SampleOn[A, B any](fa data.Event[A], fab data.Event[func(A) B]) data.Event[
 
 		for {
 			select {
-			case a, ok = <-as:
-				if !ok {
-					as = nil
-					if abs == nil {
-						return
-					}
-					continue
-				}
-				aLatest = a
-			case ab, ok = <-abs:
-				if !ok {
-					abs = nil
-					if as == nil {
-						return
-					}
-					continue
-				}
+			case <-done:
+				return
+			default:
 				select {
 				case <-done:
 					return
-				default:
+				case a, ok = <-as:
+					if !ok {
+						as = nil
+						if abs == nil {
+							return
+						}
+						continue
+					}
+					aLatest = a
+				case ab, ok = <-abs:
+					if !ok {
+						abs = nil
+						if as == nil {
+							return
+						}
+						continue
+					}
 					select {
 					case <-done:
 						return
-					case sub <- ab(aLatest):
+					default:
+						select {
+						case <-done:
+							return
+						case sub <- ab(aLatest):
+						}
 					}
 				}
 			}
@@ -271,14 +278,14 @@ func identity[A any](a A) A {
 
 // SampleOn_ creates an event which samples the latest values from the first event at the
 // times when the second event fires, ignoring the values produced by the second event.
-func SampleOn_[A, B any](fa data.Event[A], fb data.Event[B]) data.Event[A] {
+func SampleOn_[A, B any](fa fpgo.Event[A], fb fpgo.Event[B]) fpgo.Event[A] {
 	return SampleOn(fa, Map(fb, func(_ B) func(A) A {
 		return identity[A]
 	}))
 }
 
 // Alt creates an event which emits values simultaneously from two source events.
-func Alt[A any](x data.Event[A], y data.Event[A]) data.Event[A] {
+func Alt[A any](x fpgo.Event[A], y fpgo.Event[A]) fpgo.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -342,7 +349,7 @@ func Alt[A any](x data.Event[A], y data.Event[A]) data.Event[A] {
 }
 
 // Filter creates an event which emits values from a source event when a predicate holds.
-func Filter[A any](fa data.Event[A], predicate data.Predicate[A]) data.Event[A] {
+func Filter[A any](fa fpgo.Event[A], predicate fpgo.Predicate[A]) fpgo.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -376,29 +383,14 @@ func Filter[A any](fa data.Event[A], predicate data.Predicate[A]) data.Event[A] 
 	}
 }
 
-func plus1_[A any](_ A, n int) int {
-	return n + 1
-}
-
-// Count creates an event that emits the number of times a source event is fired.
-func Count[A any](fa data.Event[A]) data.Event[int] {
-	return Fold(fa, 0, plus1_[A])
-}
-
-// CountAll returns the number of times a source event is fired in total.
-func CountAll[A any](ctx context.Context, fa data.Event[A]) int {
-	return ReduceRight(ctx, fa, 0, plus1_[A])
-}
-
-// CountWindow creates an event which emits the number of times a source event is fired
-// within a moving time window approximately.
-func CountWindow[A any](fa data.Event[A], dur time.Duration) data.Event[int] {
-	return func(ctx context.Context, sub chan<- int) {
+func FilterMap[A, B any](fa fpgo.Event[A], f func(a A) fpgo.Nilable[B]) fpgo.Event[B] {
+	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
 		var (
-			counter = sliding.NewCounter(dur)
-			as      = make(chan A)
+			as = make(chan A)
+			a  A
+			nb fpgo.Nilable[B]
 		)
 
 		var done <-chan struct{}
@@ -407,30 +399,42 @@ func CountWindow[A any](fa data.Event[A], dur time.Duration) data.Event[int] {
 			done = ctx.Done()
 		}
 
-		defer counter.Stop()
-
 		go fa(ctx, as)
 
-	LOOP:
-		for range as {
-			counter.Inc()
-
-			select {
-			case <-done:
-				break LOOP
-			default:
+		for a = range as {
+			nb = f(a)
+			if nilable.IsSome(nb) {
 				select {
 				case <-done:
-					break LOOP
-				case sub <- counter.Peek():
+					return
+				default:
+					select {
+					case <-done:
+						return
+					case sub <- *nb:
+					}
 				}
 			}
 		}
 	}
 }
 
+func plus1_[A any](_ A, n int) int {
+	return n + 1
+}
+
+// Count creates an event that emits the number of times a source event is fired.
+func Count[A any](fa fpgo.Event[A]) fpgo.Event[int] {
+	return Fold(fa, 0, plus1_[A])
+}
+
+// CountAll returns the number of times a source event is fired in total.
+func CountAll[A any](ctx context.Context, fa fpgo.Event[A]) int {
+	return ReduceRight(ctx, fa, 0, plus1_[A])
+}
+
 // Take creates an event which emits the first n values observed from a source event.
-func Take[A any](fa data.Event[A], n int) data.Event[A] {
+func Take[A any](fa fpgo.Event[A], n int) fpgo.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -470,7 +474,7 @@ func Take[A any](fa data.Event[A], n int) data.Event[A] {
 }
 
 // Until creates an event which emits values from an event until a predicate holds.
-func Until[A any](fa data.Event[A], predicate data.Predicate[A]) data.Event[A] {
+func Until[A any](fa fpgo.Event[A], predicate fpgo.Predicate[A]) fpgo.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -507,7 +511,7 @@ func Until[A any](fa data.Event[A], predicate data.Predicate[A]) data.Event[A] {
 
 // Once creates an event which emits values from an event for once and the last
 // time when a predicate holds.
-func Once[A any](fa data.Event[A], predicate data.Predicate[A]) data.Event[A] {
+func Once[A any](fa fpgo.Event[A], predicate fpgo.Predicate[A]) fpgo.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -544,7 +548,7 @@ func Once[A any](fa data.Event[A], predicate data.Predicate[A]) data.Event[A] {
 
 // Fold creates an event which combines the values from a source event by applying
 // a function starting with an initial value.
-func Fold[A, B any](fa data.Event[A], b B, f func(A, B) B) data.Event[B] {
+func Fold[A, B any](fa fpgo.Event[A], b B, f func(A, B) B) fpgo.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -579,7 +583,7 @@ func Fold[A, B any](fa data.Event[A], b B, f func(A, B) B) data.Event[B] {
 }
 
 // Of creates an event which emits a single value.
-func Of[A any](a A) data.Event[A] {
+func Of[A any](a A) fpgo.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -602,7 +606,7 @@ func Of[A any](a A) data.Event[A] {
 }
 
 // Interval creates an event which emits the current time periodically.
-func Interval(dur time.Duration) data.Event[time.Time] {
+func Interval(dur time.Duration) fpgo.Event[time.Time] {
 	return func(ctx context.Context, sub chan<- time.Time) {
 		defer close(sub)
 
@@ -649,8 +653,17 @@ func Interval(dur time.Duration) data.Event[time.Time] {
 	}
 }
 
+func FromIO[A any](io fpgo.IO[A]) fpgo.Event[A] {
+	return Map(
+		Take(Empty(), 1),
+		func(_ struct{}) A {
+			return io()
+		},
+	)
+}
+
 // From creates an event which emits multiple values sequentially from the supplied slice.
-func From[A any](as []A) data.Event[A] {
+func From[A any](as []A) fpgo.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -683,7 +696,7 @@ func From[A any](as []A) data.Event[A] {
 var empty = struct{}{}
 
 // Empty creates an event which emits an empty struct forever.
-func Empty() data.Event[struct{}] {
+func Empty() fpgo.Event[struct{}] {
 	return func(ctx context.Context, sub chan<- struct{}) {
 		defer close(sub)
 
@@ -709,7 +722,7 @@ func Empty() data.Event[struct{}] {
 }
 
 // After creates an event which emits a value after waiting for the specified duration.
-func After[A any](dur time.Duration, a A) data.Event[A] {
+func After[A any](dur time.Duration, a A) fpgo.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -753,7 +766,7 @@ func After[A any](dur time.Duration, a A) data.Event[A] {
 
 // MapNotNil creates an event which filters out any nil values by applying a function
 // on each value received from some source event.
-func MapNotNil[A, B any](fa data.Event[A], f func(A) *B) data.Event[B] {
+func MapNotNil[A, B any](fa fpgo.Event[A], f func(A) *B) fpgo.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -796,23 +809,14 @@ func MapNotNil[A, B any](fa data.Event[A], f func(A) *B) data.Event[B] {
 // A Last represents an event associated with its last value.
 type Last[A any] struct {
 	Now  A
-	Last *A
+	Last A
 }
 
 // WithLast creates an event which emits successive event values.
-func WithLast[A any](fa data.Event[A]) data.Event[*Last[A]] {
-	return MapNotNil(
-		Fold(fa, nil, func(a A, l **Last[A]) **Last[A] {
-			if l == nil {
-				r := &Last[A]{Now: a, Last: nil}
-				return &r
-			} else {
-				r := &Last[A]{Now: a, Last: &(*l).Now}
-				return &r
-			}
-		}),
-		identity[**Last[A]],
-	)
+func WithLast[A any](fa fpgo.Event[A]) fpgo.Event[Last[A]] {
+	return Fold(fa, Last[A]{}, func(a A, l Last[A]) Last[A] {
+		return Last[A]{Now: a, Last: l.Now}
+	})
 }
 
 // A Time represents an event value associated with some time.
@@ -822,8 +826,8 @@ type Time[A any] struct {
 }
 
 // WithTime creates an event which reports the current local time.
-func WithTime[A any](fa data.Event[A]) data.Event[*Time[A]] {
-	return func(ctx context.Context, sub chan<- *Time[A]) {
+func WithTime[A any](fa fpgo.Event[A]) fpgo.Event[Time[A]] {
+	return func(ctx context.Context, sub chan<- Time[A]) {
 		defer close(sub)
 
 		var (
@@ -847,7 +851,34 @@ func WithTime[A any](fa data.Event[A]) data.Event[*Time[A]] {
 				select {
 				case <-done:
 					return
-				case sub <- &Time[A]{Value: a, Time: time.Now()}:
+				case sub <- Time[A]{Value: a, Time: time.Now()}:
+				}
+			}
+		}
+	}
+}
+
+func FromChannel[A any](source <-chan A) fpgo.Event[A] {
+	return func(ctx context.Context, sub chan<- A) {
+		defer close(sub)
+
+		var done <-chan struct{}
+
+		if ctx != nil {
+			done = ctx.Done()
+		}
+
+		var a A
+
+		for a = range source {
+			select {
+			case <-done:
+				return
+			default:
+				select {
+				case <-done:
+					return
+				case sub <- a:
 				}
 			}
 		}

@@ -1,29 +1,27 @@
 // Package io implements the IO type.
 package io
 
-import (
-	"github.com/onur1/data"
-)
+import "github.com/onur1/fpgo"
 
-func Map[A, B any](fa data.IO[A], f func(A) B) data.IO[B] {
+func Map[A, B any](fa fpgo.IO[A], f func(A) B) fpgo.IO[B] {
 	return func() B {
 		return f(fa())
 	}
 }
 
-func Ap[A, B any](fab data.IO[func(A) B], fa data.IO[A]) data.IO[B] {
+func Ap[A, B any](fab fpgo.IO[func(A) B], fa fpgo.IO[A]) fpgo.IO[B] {
 	return func() B {
 		return fab()(fa())
 	}
 }
 
-func Chain[A, B any](ma data.IO[A], f func(A) data.IO[B]) data.IO[B] {
+func Chain[A, B any](ma fpgo.IO[A], f func(A) fpgo.IO[B]) fpgo.IO[B] {
 	return func() B {
 		return f(ma())()
 	}
 }
 
-func ApFirst[A, B any](fa data.IO[A], fb data.IO[B]) data.IO[A] {
+func ApFirst[A, B any](fa fpgo.IO[A], fb fpgo.IO[B]) fpgo.IO[A] {
 	return Ap(Map(fa, func(a A) func(B) A {
 		return func(_ B) A {
 			return a
@@ -31,7 +29,7 @@ func ApFirst[A, B any](fa data.IO[A], fb data.IO[B]) data.IO[A] {
 	}), fb)
 }
 
-func ApSecond[A, B any](fa data.IO[A], fb data.IO[B]) data.IO[B] {
+func ApSecond[A, B any](fa fpgo.IO[A], fb fpgo.IO[B]) fpgo.IO[B] {
 	return Ap(Map(fa, func(_ A) func(B) B {
 		return func(b B) B {
 			return b
@@ -39,15 +37,15 @@ func ApSecond[A, B any](fa data.IO[A], fb data.IO[B]) data.IO[B] {
 	}), fb)
 }
 
-func ChainFirst[A, B any](ma data.IO[A], f func(A) data.IO[B]) data.IO[A] {
-	return Chain(ma, func(a A) data.IO[A] {
+func ChainFirst[A, B any](ma fpgo.IO[A], f func(A) fpgo.IO[B]) fpgo.IO[A] {
+	return Chain(ma, func(a A) fpgo.IO[A] {
 		return Map(f(a), func(_ B) A {
 			return a
 		})
 	})
 }
 
-func ChainRec[A, B any](init A, f func(A) data.IO[func() (A, B, bool)]) data.IO[B] {
+func ChainRec[A, B any](init A, f func(A) fpgo.IO[func() (A, B, bool)]) fpgo.IO[B] {
 	return func() B {
 		var (
 			a  A
@@ -68,7 +66,7 @@ func ChainRec[A, B any](init A, f func(A) data.IO[func() (A, B, bool)]) data.IO[
 	}
 }
 
-func Of[A any](a A) data.IO[A] {
+func Of[A any](a A) fpgo.IO[A] {
 	return func() A {
 		return a
 	}

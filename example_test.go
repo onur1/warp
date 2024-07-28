@@ -1,13 +1,13 @@
-package data_test
+package fpgo_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
 
-	"github.com/onur1/data"
-	"github.com/onur1/data/event"
-	"github.com/onur1/data/result"
+	"github.com/onur1/fpgo"
+	"github.com/onur1/fpgo/event"
+	"github.com/onur1/fpgo/result"
 )
 
 func ExampleResult() {
@@ -15,7 +15,7 @@ func ExampleResult() {
 
 	// head returns the first value contained in a slice, or fails with
 	// an empty slice error.
-	head := func(as []float64) data.Result[float64] {
+	head := func(as []float64) fpgo.Result[float64] {
 		if len(as) == 0 {
 			return result.Error[float64](errEmptySlice)
 		}
@@ -26,7 +26,7 @@ func ExampleResult() {
 
 	// inverse returns an inverse of a number, or fails with
 	// division by zero error if 0 is encountered.
-	inverse := func(n float64) data.Result[float64] {
+	inverse := func(n float64) fpgo.Result[float64] {
 		if n == 0 {
 			return result.Error[float64](errDivByZero)
 		}
@@ -38,7 +38,8 @@ func ExampleResult() {
 	}
 
 	check := func(nums []float64) string {
-		return result.Fold(
+		return result.Reduce(
+			context.Background(),
 			result.Chain(
 				// double first number
 				result.Map(head(nums), double),

@@ -1,5 +1,5 @@
-// Package data provides a set of monadic data structures.
-package data
+// Package fpgo provides experimental monads.
+package fpgo
 
 import (
 	"context"
@@ -10,10 +10,7 @@ type IO[A any] func() A
 
 // A Result represents a result of a computation which is either a value of type A,
 // or an error.
-type Result[A any] func() (A, error)
-
-// A Nilable represents an optional value which is either some value or nil.
-type Nilable[A any] *A
+type Result[A any] func(context.Context) (A, error)
 
 // An Event represents a collection of discrete occurrences of events with associated
 // values.
@@ -24,9 +21,8 @@ type Event[A any] func(context.Context, chan<- A)
 // a value which is encapsulated in a Result.
 type Future[A any] Event[Result[A]]
 
-// A State represents a value which depends on itself through some computation, where
-// parameter S is the state type to carry and A is the type of a return value.
-type State[S, A any] func(s S) (A, S)
-
 // A Predicate represents a predicate (boolean-valued function) of one argument.
 type Predicate[A any] func(A) bool
+
+// A Nilable represents an optional value which is either some value or nil.
+type Nilable[A any] *A

@@ -1,19 +1,20 @@
 package nilable_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
-	"github.com/onur1/data"
-	"github.com/onur1/data/nilable"
-	"github.com/onur1/data/result"
+	"github.com/onur1/fpgo"
+	"github.com/onur1/fpgo/nilable"
+	"github.com/onur1/fpgo/result"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNilable(t *testing.T) {
 	testCases := []struct {
 		desc     string
-		nilable  data.Nilable[int]
+		nilable  fpgo.Nilable[int]
 		expected int
 	}{
 		{
@@ -45,12 +46,12 @@ func TestNilable(t *testing.T) {
 		},
 		{
 			desc:     "FromResult (succeed)",
-			nilable:  nilable.FromResult(result.Ok(42)),
+			nilable:  nilable.FromResult(context.TODO(), result.Ok(42)),
 			expected: 42,
 		},
 		{
 			desc:    "FromResult (fail)",
-			nilable: nilable.FromResult(result.Error[int](errors.New("some error"))),
+			nilable: nilable.FromResult(context.TODO(), result.Error[int](errors.New("some error"))),
 		},
 		{
 			desc: "Attempt",
@@ -73,7 +74,7 @@ func TestNilable(t *testing.T) {
 	}
 }
 
-func assertEq(t *testing.T, v data.Nilable[int], expected int) {
+func assertEq(t *testing.T, v fpgo.Nilable[int], expected int) {
 	if v == nil {
 		assert.Equal(t, expected, 0)
 	} else {
