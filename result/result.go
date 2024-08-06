@@ -5,24 +5,24 @@ import (
 	"context"
 	"time"
 
-	"github.com/onur1/gofp"
+	"github.com/onur1/warp"
 )
 
 // Ok creates a result which never fails and returns a value of type A.
-func Ok[A any](a A) gofp.Result[A] {
+func Ok[A any](a A) warp.Result[A] {
 	return func(_ context.Context) (A, error) {
 		return a, nil
 	}
 }
 
-func After[A any](dur time.Duration, a A) gofp.Result[A] {
+func After[A any](dur time.Duration, a A) warp.Result[A] {
 	return func(_ context.Context) (A, error) {
 		time.Sleep(dur)
 		return a, nil
 	}
 }
 
-func ErrorAfter[A any](dur time.Duration, err error) gofp.Result[A] {
+func ErrorAfter[A any](dur time.Duration, err error) warp.Result[A] {
 	return func(_ context.Context) (a A, _ error) {
 		time.Sleep(dur)
 		return a, err
@@ -30,7 +30,7 @@ func ErrorAfter[A any](dur time.Duration, err error) gofp.Result[A] {
 }
 
 // Error creates a result which always fails with an error.
-func Error[A any](err error) gofp.Result[A] {
+func Error[A any](err error) warp.Result[A] {
 	return func(_ context.Context) (a A, _ error) {
 		return a, err
 	}
@@ -38,14 +38,14 @@ func Error[A any](err error) gofp.Result[A] {
 
 // Zero creates a result which never fails and returns a zero value
 // of the type that it is initialized with.
-func Zero[A any]() gofp.Result[A] {
+func Zero[A any]() warp.Result[A] {
 	return func(_ context.Context) (a A, _ error) {
 		return
 	}
 }
 
 // Map creates a result by applying a function on a succeeding result.
-func Map[A, B any](fa gofp.Result[A], f func(A) B) gofp.Result[B] {
+func Map[A, B any](fa warp.Result[A], f func(A) B) warp.Result[B] {
 	return func(ctx context.Context) (b B, err error) {
 		var a A
 		if a, err = fa(ctx); err != nil {
@@ -57,7 +57,7 @@ func Map[A, B any](fa gofp.Result[A], f func(A) B) gofp.Result[B] {
 }
 
 // MapError creates a result by applying a function on a failing result.
-func MapError[A any](fa gofp.Result[A], f func(error) error) gofp.Result[A] {
+func MapError[A any](fa warp.Result[A], f func(error) error) warp.Result[A] {
 	return func(ctx context.Context) (a A, err error) {
 		if a, err = fa(ctx); err != nil {
 			err = f(err)
@@ -69,7 +69,7 @@ func MapError[A any](fa gofp.Result[A], f func(error) error) gofp.Result[A] {
 
 // Ap creates a result by applying a function contained in the first result
 // on the value contained in the second result.
-func Ap[A, B any](fab gofp.Result[func(A) B], fa gofp.Result[A]) gofp.Result[B] {
+func Ap[A, B any](fab warp.Result[func(A) B], fa warp.Result[A]) warp.Result[B] {
 	return func(ctx context.Context) (b B, err error) {
 		var ab func(A) B
 
@@ -91,7 +91,7 @@ func Ap[A, B any](fab gofp.Result[func(A) B], fa gofp.Result[A]) gofp.Result[B] 
 
 // Chain creates a result which combines two results in sequence, using the
 // return value of one result to determine the next one.
-func Chain[A, B any](ma gofp.Result[A], f func(A) gofp.Result[B]) gofp.Result[B] {
+func Chain[A, B any](ma warp.Result[A], f func(A) warp.Result[B]) warp.Result[B] {
 	return func(ctx context.Context) (_ B, err error) {
 		var a A
 		if a, err = ma(ctx); err != nil {
@@ -103,15 +103,15 @@ func Chain[A, B any](ma gofp.Result[A], f func(A) gofp.Result[B]) gofp.Result[B]
 
 // ChainFirst composes two results in sequence, using the return value of one result
 // to determine the next one, keeping only the first result.
-func ChainFirst[A, B any](ma gofp.Result[A], f func(A) gofp.Result[B]) gofp.Result[A] {
-	return Chain(ma, func(a A) gofp.Result[A] {
+func ChainFirst[A, B any](ma warp.Result[A], f func(A) warp.Result[B]) warp.Result[A] {
+	return Chain(ma, func(a A) warp.Result[A] {
 		return Map(f(a), fst[A, B](a))
 	})
 }
 
 // Bimap creates a result by mapping a pair of functions over an error or a value
 // contained in a result.
-func Bimap[A, B any](fa gofp.Result[A], f func(error) error, g func(A) B) gofp.Result[B] {
+func Bimap[A, B any](fa warp.Result[A], f func(error) error, g func(A) B) warp.Result[B] {
 	return func(ctx context.Context) (b B, err error) {
 		var a A
 		if a, err = fa(ctx); err != nil {
@@ -125,19 +125,19 @@ func Bimap[A, B any](fa gofp.Result[A], f func(error) error, g func(A) B) gofp.R
 
 // ApFirst creates a result by combining two effectful computations, keeping
 // only the result of the first.
-func ApFirst[A, B any](fa gofp.Result[A], fb gofp.Result[B]) gofp.Result[A] {
+func ApFirst[A, B any](fa warp.Result[A], fb warp.Result[B]) warp.Result[A] {
 	return Ap(Map(fa, fst[A, B]), fb)
 }
 
 // ApSecond creates a result by combining two effectful computations, keeping
 // only the result of the second.
-func ApSecond[A, B any](fa gofp.Result[A], fb gofp.Result[B]) gofp.Result[B] {
+func ApSecond[A, B any](fa warp.Result[A], fb warp.Result[B]) warp.Result[B] {
 	return Ap(Map(fa, snd[A, B]), fb)
 }
 
 // Reduce takes two functions and a result and returns a value by applying
 // one of the supplied functions to the inner value.
-func Reduce[A, B any](ctx context.Context, ma gofp.Result[A], onError func(error) B, onSuccess func(A) B) B {
+func Reduce[A, B any](ctx context.Context, ma warp.Result[A], onError func(error) B, onSuccess func(A) B) B {
 	if a, err := ma(ctx); err != nil {
 		return onError(err)
 	} else {
@@ -147,7 +147,7 @@ func Reduce[A, B any](ctx context.Context, ma gofp.Result[A], onError func(error
 
 // GetOrElse creates a result which can be used to recover from a failing result
 // with a new value.
-func GetOrElse[A any](ctx context.Context, ma gofp.Result[A], onError func(error) A) A {
+func GetOrElse[A any](ctx context.Context, ma warp.Result[A], onError func(error) A) A {
 	if a, err := ma(ctx); err != nil {
 		return onError(err)
 	} else {
@@ -157,7 +157,7 @@ func GetOrElse[A any](ctx context.Context, ma gofp.Result[A], onError func(error
 
 // OrElse creates a result which can be used to recover from a failing result
 // by switching to a new result.
-func OrElse[A any](ma gofp.Result[A], onError func(error) gofp.Result[A]) gofp.Result[A] {
+func OrElse[A any](ma warp.Result[A], onError func(error) warp.Result[A]) warp.Result[A] {
 	return func(ctx context.Context) (a A, err error) {
 		if a, err = ma(ctx); err != nil {
 			return onError(err)(ctx)
@@ -168,8 +168,8 @@ func OrElse[A any](ma gofp.Result[A], onError func(error) gofp.Result[A]) gofp.R
 
 // FilterOrElse creates a result which can be used to fail with an error unless
 // a predicate holds on a succeeding result.
-func FilterOrElse[A any](ma gofp.Result[A], predicate gofp.Predicate[A], onFalse func(A) error) gofp.Result[A] {
-	return Chain(ma, func(a A) gofp.Result[A] {
+func FilterOrElse[A any](ma warp.Result[A], predicate warp.Predicate[A], onFalse func(A) error) warp.Result[A] {
+	return Chain(ma, func(a A) warp.Result[A] {
 		if predicate(a) {
 			return Ok(a)
 		} else {
@@ -179,7 +179,7 @@ func FilterOrElse[A any](ma gofp.Result[A], predicate gofp.Predicate[A], onFalse
 }
 
 // Fork is like Reduce but it doesn't have a return value.
-func Fork[A any](ctx context.Context, ma gofp.Result[A], onError func(error), onSuccess func(A)) {
+func Fork[A any](ctx context.Context, ma warp.Result[A], onError func(error), onSuccess func(A)) {
 	if a, err := ma(ctx); err != nil {
 		onError(err)
 	} else {
@@ -189,20 +189,20 @@ func Fork[A any](ctx context.Context, ma gofp.Result[A], onError func(error), on
 
 // FromNilable creates a result from a nilable, returning the supplied error
 // for nil values.
-func FromNilable[A any](ma gofp.Nilable[A], onNil func() error) gofp.Result[A] {
+func FromNilable[A any](ma warp.Nilable[A], onNil func() error) warp.Result[A] {
 	if ma == nil {
 		return Error[A](onNil())
 	}
 	return Ok(*ma)
 }
 
-func FromResult1[A, I any](f func(context.Context, I) (A, error), i I) gofp.Result[A] {
+func FromResult1[A, I any](f func(context.Context, I) (A, error), i I) warp.Result[A] {
 	return func(ctx context.Context) (A, error) {
 		return f(ctx, i)
 	}
 }
 
-func FromResult[A any](result gofp.Result[A]) (r gofp.Result[A]) {
+func FromResult[A any](result warp.Result[A]) (r warp.Result[A]) {
 	r = result
 	return
 }

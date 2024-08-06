@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/onur1/gofp"
-	"github.com/onur1/gofp/nilable"
-	"github.com/onur1/gofp/result"
+	"github.com/onur1/warp"
+	"github.com/onur1/warp/nilable"
+	"github.com/onur1/warp/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +20,7 @@ var (
 func TestResult(t *testing.T) {
 	testCases := []struct {
 		desc        string
-		result      gofp.Result[int]
+		result      warp.Result[int]
 		expected    int
 		expectedErr error
 	}{
@@ -114,14 +114,14 @@ func TestResult(t *testing.T) {
 		},
 		{
 			desc: "Chain",
-			result: result.Chain(result.Ok(42), func(a int) gofp.Result[int] {
+			result: result.Chain(result.Ok(42), func(a int) warp.Result[int] {
 				return result.Ok(a + 1)
 			}),
 			expected: 43,
 		},
 		{
 			desc: "Chain (error)",
-			result: result.Chain(result.Error[int](errFailed), func(a int) gofp.Result[int] {
+			result: result.Chain(result.Error[int](errFailed), func(a int) warp.Result[int] {
 				return result.Ok(a + 1)
 			}),
 			expectedErr: errFailed,
@@ -142,14 +142,14 @@ func TestResult(t *testing.T) {
 		},
 		{
 			desc: "OrElse (error)",
-			result: result.OrElse(result.Error[int](errFailed), func(err error) gofp.Result[int] {
+			result: result.OrElse(result.Error[int](errFailed), func(err error) warp.Result[int] {
 				return result.Ok(555)
 			}),
 			expected: 555,
 		},
 		{
 			desc: "OrElse",
-			result: result.OrElse(result.Ok(666), func(err error) gofp.Result[int] {
+			result: result.OrElse(result.Ok(666), func(err error) warp.Result[int] {
 				return result.Ok(555)
 			}),
 			expected: 666,
@@ -202,7 +202,7 @@ func TestResult(t *testing.T) {
 	}
 }
 
-func assertEq(t *testing.T, res gofp.Result[int], expected int, expectedErr error) {
+func assertEq(t *testing.T, res warp.Result[int], expected int, expectedErr error) {
 	x, err := res(context.TODO())
 	if err != nil {
 		assert.Equal(t, expectedErr, err)

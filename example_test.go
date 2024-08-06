@@ -1,13 +1,13 @@
-package gofp_test
+package warp_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
 
-	"github.com/onur1/gofp"
-	"github.com/onur1/gofp/event"
-	"github.com/onur1/gofp/result"
+	"github.com/onur1/warp"
+	"github.com/onur1/warp/event"
+	"github.com/onur1/warp/result"
 )
 
 func ExampleResult() {
@@ -15,7 +15,7 @@ func ExampleResult() {
 
 	// head returns the first value contained in a slice, or fails with
 	// an empty slice error.
-	head := func(as []float64) gofp.Result[float64] {
+	head := func(as []float64) warp.Result[float64] {
 		if len(as) == 0 {
 			return result.Error[float64](errEmptySlice)
 		}
@@ -26,7 +26,7 @@ func ExampleResult() {
 
 	// inverse returns an inverse of a number, or fails with
 	// division by zero error if 0 is encountered.
-	inverse := func(n float64) gofp.Result[float64] {
+	inverse := func(n float64) warp.Result[float64] {
 		if n == 0 {
 			return result.Error[float64](errDivByZero)
 		}

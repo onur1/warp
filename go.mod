@@ -1,4 +1,4 @@
-module github.com/onur1/gofp
+module github.com/onur1/warp
 
 go 1.19
 

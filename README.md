@@ -1,6 +1,6 @@
-# gofp
+# warp
 
-Package gofp provides experimental monads in Go.
+Package warp provides experimental monads in Go.
 
 ## Types
 

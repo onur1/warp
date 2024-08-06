@@ -1,5 +1,5 @@
-// Package gofp provides experimental monads.
-package gofp
+// Package warp provides experimental monads.
+package warp
 
 import (
 	"context"

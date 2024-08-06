@@ -5,13 +5,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/onur1/gofp"
-	"github.com/onur1/gofp/nilable"
+	"github.com/onur1/warp"
+	"github.com/onur1/warp/nilable"
 )
 
 // Map creates an event by applying a function on each value received from a source
 // event.
-func Map[A, B any](fa gofp.Event[A], f func(A) B) gofp.Event[B] {
+func Map[A, B any](fa warp.Event[A], f func(A) B) warp.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -45,7 +45,7 @@ func Map[A, B any](fa gofp.Event[A], f func(A) B) gofp.Event[B] {
 
 // Ap creates an event by applying the latest observed function from the first event on
 // each value received from the second event.
-func Ap[A, B any](fab gofp.Event[func(A) B], fa gofp.Event[A]) gofp.Event[B] {
+func Ap[A, B any](fab warp.Event[func(A) B], fa warp.Event[A]) warp.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -117,7 +117,7 @@ func Ap[A, B any](fab gofp.Event[func(A) B], fa gofp.Event[A]) gofp.Event[B] {
 
 // Chain creates an event which composes two events in sequence, using the return value
 // of the first event to determine the next one.
-func Chain[A, B any](fa gofp.Event[A], f func(A) gofp.Event[B]) gofp.Event[B] {
+func Chain[A, B any](fa warp.Event[A], f func(A) warp.Event[B]) warp.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -126,7 +126,7 @@ func Chain[A, B any](fa gofp.Event[A], f func(A) gofp.Event[B]) gofp.Event[B] {
 			bs chan B
 			a  A
 			b  B
-			fb gofp.Event[B]
+			fb warp.Event[B]
 		)
 
 		var done <-chan struct{}
@@ -162,7 +162,7 @@ func Chain[A, B any](fa gofp.Event[A], f func(A) gofp.Event[B]) gofp.Event[B] {
 // Reduce returns a value by applying a function on each value received from an event,
 // in order, passing in the value and the return value from the calculation on the
 // preceding element.
-func Reduce[A, B any](ctx context.Context, fa gofp.Event[A], b B, f func(B, A) B) B {
+func Reduce[A, B any](ctx context.Context, fa warp.Event[A], b B, f func(B, A) B) B {
 	as := make(chan A)
 
 	go fa(ctx, as)
@@ -179,7 +179,7 @@ func Reduce[A, B any](ctx context.Context, fa gofp.Event[A], b B, f func(B, A) B
 // ReduceRight applies a function against an accumulator and each observed value of
 // the event (from right-to-left) to reduce it to a single value.
 // Same as Reduce but applied from end to start.
-func ReduceRight[A, B any](ctx context.Context, fa gofp.Event[A], b B, f func(A, B) B) B {
+func ReduceRight[A, B any](ctx context.Context, fa warp.Event[A], b B, f func(A, B) B) B {
 	asc := make(chan A)
 
 	go fa(ctx, asc)
@@ -204,7 +204,7 @@ func ReduceRight[A, B any](ctx context.Context, fa gofp.Event[A], b B, f func(A,
 
 // SampleOn creates an event which samples the latest values from the first event at
 // the times when the second event fires.
-func SampleOn[A, B any](fa gofp.Event[A], fab gofp.Event[func(A) B]) gofp.Event[B] {
+func SampleOn[A, B any](fa warp.Event[A], fab warp.Event[func(A) B]) warp.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -278,14 +278,14 @@ func identity[A any](a A) A {
 
 // SampleOn_ creates an event which samples the latest values from the first event at the
 // times when the second event fires, ignoring the values produced by the second event.
-func SampleOn_[A, B any](fa gofp.Event[A], fb gofp.Event[B]) gofp.Event[A] {
+func SampleOn_[A, B any](fa warp.Event[A], fb warp.Event[B]) warp.Event[A] {
 	return SampleOn(fa, Map(fb, func(_ B) func(A) A {
 		return identity[A]
 	}))
 }
 
 // Alt creates an event which emits values simultaneously from two source events.
-func Alt[A any](x gofp.Event[A], y gofp.Event[A]) gofp.Event[A] {
+func Alt[A any](x warp.Event[A], y warp.Event[A]) warp.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -349,7 +349,7 @@ func Alt[A any](x gofp.Event[A], y gofp.Event[A]) gofp.Event[A] {
 }
 
 // Filter creates an event which emits values from a source event when a predicate holds.
-func Filter[A any](fa gofp.Event[A], predicate gofp.Predicate[A]) gofp.Event[A] {
+func Filter[A any](fa warp.Event[A], predicate warp.Predicate[A]) warp.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -383,14 +383,14 @@ func Filter[A any](fa gofp.Event[A], predicate gofp.Predicate[A]) gofp.Event[A] 
 	}
 }
 
-func FilterMap[A, B any](fa gofp.Event[A], f func(a A) gofp.Nilable[B]) gofp.Event[B] {
+func FilterMap[A, B any](fa warp.Event[A], f func(a A) warp.Nilable[B]) warp.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
 		var (
 			as = make(chan A)
 			a  A
-			nb gofp.Nilable[B]
+			nb warp.Nilable[B]
 		)
 
 		var done <-chan struct{}
@@ -424,17 +424,17 @@ func plus1_[A any](_ A, n int) int {
 }
 
 // Count creates an event that emits the number of times a source event is fired.
-func Count[A any](fa gofp.Event[A]) gofp.Event[int] {
+func Count[A any](fa warp.Event[A]) warp.Event[int] {
 	return Fold(fa, 0, plus1_[A])
 }
 
 // CountAll returns the number of times a source event is fired in total.
-func CountAll[A any](ctx context.Context, fa gofp.Event[A]) int {
+func CountAll[A any](ctx context.Context, fa warp.Event[A]) int {
 	return ReduceRight(ctx, fa, 0, plus1_[A])
 }
 
 // Take creates an event which emits the first n values observed from a source event.
-func Take[A any](fa gofp.Event[A], n int) gofp.Event[A] {
+func Take[A any](fa warp.Event[A], n int) warp.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -474,7 +474,7 @@ func Take[A any](fa gofp.Event[A], n int) gofp.Event[A] {
 }
 
 // Until creates an event which emits values from an event until a predicate holds.
-func Until[A any](fa gofp.Event[A], predicate gofp.Predicate[A]) gofp.Event[A] {
+func Until[A any](fa warp.Event[A], predicate warp.Predicate[A]) warp.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -511,7 +511,7 @@ func Until[A any](fa gofp.Event[A], predicate gofp.Predicate[A]) gofp.Event[A] {
 
 // Once creates an event which emits values from an event for once and the last
 // time when a predicate holds.
-func Once[A any](fa gofp.Event[A], predicate gofp.Predicate[A]) gofp.Event[A] {
+func Once[A any](fa warp.Event[A], predicate warp.Predicate[A]) warp.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -548,7 +548,7 @@ func Once[A any](fa gofp.Event[A], predicate gofp.Predicate[A]) gofp.Event[A] {
 
 // Fold creates an event which combines the values from a source event by applying
 // a function starting with an initial value.
-func Fold[A, B any](fa gofp.Event[A], b B, f func(A, B) B) gofp.Event[B] {
+func Fold[A, B any](fa warp.Event[A], b B, f func(A, B) B) warp.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -583,7 +583,7 @@ func Fold[A, B any](fa gofp.Event[A], b B, f func(A, B) B) gofp.Event[B] {
 }
 
 // Of creates an event which emits a single value.
-func Of[A any](a A) gofp.Event[A] {
+func Of[A any](a A) warp.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -606,7 +606,7 @@ func Of[A any](a A) gofp.Event[A] {
 }
 
 // Interval creates an event which emits the current time periodically.
-func Interval(dur time.Duration) gofp.Event[time.Time] {
+func Interval(dur time.Duration) warp.Event[time.Time] {
 	return func(ctx context.Context, sub chan<- time.Time) {
 		defer close(sub)
 
@@ -653,7 +653,7 @@ func Interval(dur time.Duration) gofp.Event[time.Time] {
 	}
 }
 
-func FromIO[A any](io gofp.IO[A]) gofp.Event[A] {
+func FromIO[A any](io warp.IO[A]) warp.Event[A] {
 	return Map(
 		Take(Empty(), 1),
 		func(_ struct{}) A {
@@ -663,7 +663,7 @@ func FromIO[A any](io gofp.IO[A]) gofp.Event[A] {
 }
 
 // From creates an event which emits multiple values sequentially from the supplied slice.
-func From[A any](as []A) gofp.Event[A] {
+func From[A any](as []A) warp.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -696,7 +696,7 @@ func From[A any](as []A) gofp.Event[A] {
 var empty = struct{}{}
 
 // Empty creates an event which emits an empty struct forever.
-func Empty() gofp.Event[struct{}] {
+func Empty() warp.Event[struct{}] {
 	return func(ctx context.Context, sub chan<- struct{}) {
 		defer close(sub)
 
@@ -722,7 +722,7 @@ func Empty() gofp.Event[struct{}] {
 }
 
 // After creates an event which emits a value after waiting for the specified duration.
-func After[A any](dur time.Duration, a A) gofp.Event[A] {
+func After[A any](dur time.Duration, a A) warp.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
@@ -766,7 +766,7 @@ func After[A any](dur time.Duration, a A) gofp.Event[A] {
 
 // MapNotNil creates an event which filters out any nil values by applying a function
 // on each value received from some source event.
-func MapNotNil[A, B any](fa gofp.Event[A], f func(A) *B) gofp.Event[B] {
+func MapNotNil[A, B any](fa warp.Event[A], f func(A) *B) warp.Event[B] {
 	return func(ctx context.Context, sub chan<- B) {
 		defer close(sub)
 
@@ -813,7 +813,7 @@ type Last[A any] struct {
 }
 
 // WithLast creates an event which emits successive event values.
-func WithLast[A any](fa gofp.Event[A]) gofp.Event[Last[A]] {
+func WithLast[A any](fa warp.Event[A]) warp.Event[Last[A]] {
 	return Fold(fa, Last[A]{}, func(a A, l Last[A]) Last[A] {
 		return Last[A]{Now: a, Last: l.Now}
 	})
@@ -826,7 +826,7 @@ type Time[A any] struct {
 }
 
 // WithTime creates an event which reports the current local time.
-func WithTime[A any](fa gofp.Event[A]) gofp.Event[Time[A]] {
+func WithTime[A any](fa warp.Event[A]) warp.Event[Time[A]] {
 	return func(ctx context.Context, sub chan<- Time[A]) {
 		defer close(sub)
 
@@ -858,7 +858,7 @@ func WithTime[A any](fa gofp.Event[A]) gofp.Event[Time[A]] {
 	}
 }
 
-func FromChannel[A any](source <-chan A) gofp.Event[A] {
+func FromChannel[A any](source <-chan A) warp.Event[A] {
 	return func(ctx context.Context, sub chan<- A) {
 		defer close(sub)
 
