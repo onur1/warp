@@ -116,19 +116,23 @@ func main() {
     go sum(context.Background(), resultChan)
 
     // Read and print the result
-    result := <-resultChan
-    fmt.Printf("The sum of doubled numbers is: %d
-", result)
+    for result := range resultChan {
+        fmt.Printf("The sum of doubled numbers is: %d\n", result)
+    }
 }
 ```
 
 **Output:**
 
 ```
+The sum of doubled numbers is: 2
+The sum of doubled numbers is: 6
+The sum of doubled numbers is: 12
+The sum of doubled numbers is: 20
 The sum of doubled numbers is: 30
 ```
 
-In this example, we create an event from a slice of integers, double each number using the `Map` function, and then sum the doubled numbers using the `Fold` function. The result is processed asynchronously and printed to the console.
+In this example, we create an event from a slice of integers, double each number using the `Map` function, and then use `Fold` to produce a running sum of the doubled numbers. Each intermediate result is processed asynchronously and printed to the console.
 
 ## License
 
