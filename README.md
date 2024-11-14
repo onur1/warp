@@ -1,5 +1,6 @@
-
 # warp
+
+![warp](./warp-gopher.webp)
 
 **warp** is an experimental Go library that introduces monadic abstractions, enabling functional programming patterns such as `Result` and `Event` monads. By leveraging Go's generics, warp facilitates cleaner error handling and the composition of asynchronous operations.
 
